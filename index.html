@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="cs" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Směny Bosch">
+  <meta name="theme-color" content="#6750a4">
+  <title>Směny Bosch 2026 / 2027</title>
+
+  <!-- Google Fonts: Roboto & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Roboto', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          colors: {
+            // Material Design 3 Palette
+            md: {
+              primary: '#6750a4',
+              onPrimary: '#ffffff',
+              primaryContainer: '#eaddff',
+              onPrimaryContainer: '#21005d',
+              surface: '#fef7ff',
+              surfaceContainerLow: '#f7f2fa',
+              surfaceContainer: '#f3edf7',
+              surfaceContainerHigh: '#ece6f0',
+              onSurface: '#1d1b20',
+              onSurfaceVariant: '#49454f',
+              outline: '#79747e',
+              outlineVariant: '#c4c7c5',
+            },
+            // Shift Color Tokens
+            shiftR: { bg: '#e6f4ea', text: '#137333', border: '#a8dab5' },
+            shiftO: { bg: '#fef7e0', text: '#b06000', border: '#ffd8a8' },
+            shiftN: { bg: '#e8f0fe', text: '#1a73e8', border: '#adc6ff' },
+            shiftV: { bg: '#ffffff', text: '#5f6368', border: '#e0e0e0' },
+          },
+          boxShadow: {
+            'md-1': '0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30)',
+            'md-2': '0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30)',
+            'md-3': '0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.30)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #f7f2fa;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .safe-top { padding-top: max(12px, env(safe-area-inset-top)); }
+    .safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+
+    /* MDC Ripple Effect */
+    .md-ripple {
+      position: relative;
+      overflow: hidden;
+    }
+    .md-ripple::after {
+      content: "";
+      display: block;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      background-image: radial-gradient(circle, #000 10%, transparent 10.01%);
+      background-repeat: no-repeat;
+      background-position: 50%;
+      transform: scale(10, 10);
+      opacity: 0;
+      transition: transform .3s, opacity 0.5s;
+    }
+    .md-ripple:active::after {
+      transform: scale(0, 0);
+      opacity: 0.15;
+      transition: 0s;
+    }
+
+    /* Scrollbar hide */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Holiday indicator dot */
+    .is-holiday::before {
+      content: '';
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 7px;
+      height: 7px;
+      background-color: #b3261e;
+      border-radius: 50%;
+    }
+
+    /* Vacation badge */
+    .is-vacation::after {
+      content: '🌴';
+      position: absolute;
+      bottom: 2px;
+      right: 3px;
+      font-size: 11px;
+    }
+
+    /* Note badge */
+    .has-note::before {
+      content: '📝';
+      position: absolute;
+      bottom: 2px;
+      left: 3px;
+      font-size: 10px;
+    }
+  </style>
+</head>
+
+<body class="text-md-onSurface antialiased min-h-screen flex flex-col pb-24">
+
+  <!-- TOP NAVBAR (Material 3 Top App Bar) -->
+  <header class="sticky top-0 z-40 bg-md-surfaceContainerHigh/90 backdrop-blur-md border-b border-md-outlineVariant/40 safe-top shadow-md-1">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+      <!-- Title & Active Team Info -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-md-primaryContainer text-md-onPrimaryContainer flex items-center justify-center font-black text-lg shadow-sm">
+          ⚡
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-md-onSurface leading-tight">Směny Bosch</h1>
+          <p class="text-xs font-medium text-md-primary flex items-center gap-1">
+            Tým: <button onclick="openSettingsModal()" id="currentTeamBadge" class="font-bold underline decoration-2 decoration-md-primary hover:opacity-80">Růžička</button>
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Controls: View Switcher & Team Quick Selector -->
+      <div class="flex items-center gap-2">
+        <!-- View Switcher (Segmented Button) -->
+        <div class="bg-md-surfaceContainer p-1 rounded-full border border-md-outlineVariant/50 flex text-xs font-medium">
+          <button id="btnMonthView" onclick="setView('month')" class="px-3 py-1.5 rounded-full bg-md-primaryContainer text-md-onPrimaryContainer font-bold transition-all shadow-sm">
+            Měsíc
+          </button>
+          <button id="btnYearView" onclick="setView('year')" class="px-3 py-1.5 rounded-full text-md-onSurfaceVariant transition-all">
+            Rok
+          </button>
+        </div>
+
+        <!-- Team Change Button -->
+        <button onclick="openSettingsModal()" class="w-10 h-10 rounded-full bg-md-surfaceContainer hover:bg-md-surfaceContainerHigh text-md-onSurface flex items-center justify-center md-ripple active:scale-95 transition border border-md-outlineVariant/40" title="Změnit tým">
+          <span class="material-symbols-outlined text-xl">groups</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Month Selector Chip Slider (Visible in Month View) -->
+    <div id="monthSliderWrapper" class="max-w-4xl mx-auto px-4 pb-2.5 overflow-x-auto no-scrollbar flex gap-2 text-xs font-semibold">
+      <!-- Generated Dynamically -->
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER FOR TABS -->
+  <main class="max-w-4xl mx-auto px-3 pt-4 w-full flex-1">
+
+    <!-- TAB 1: KALENDÁŘ (SHIFTS) -->
+    <div id="tabCalendarView" class="space-y-4">
+      <!-- Legend Chips -->
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 text-xs font-medium">
+        <span class="px-2.5 py-1 rounded-full bg-shiftR-bg text-shiftR-text border border-shiftR-border flex items-center gap-1 font-bold">
+          <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Ranní (R)
+        </span>
+        <span class="px-2.5 py-1 rounded-full bg-shiftO-bg text-shiftO-text border border-shiftO-border flex items-center gap-1 font-bold">
+          <span class="w-2 h-2 rounded-full bg-amber-600"></span> Odpolední (O)
+        </span>
+        <span class="px-2.5 py-1 rounded-full bg-shiftN-bg text-shiftN-text border border-shiftN-border flex items-center gap-1 font-bold">
+          <span class="w-2 h-2 rounded-full bg-blue-600"></span> Noční (N)
+        </span>
+        <span class="px-2.5 py-1 rounded-full bg-white text-slate-600 border border-slate-300 flex items-center gap-1 font-bold">
+          <span class="w-2 h-2 rounded-full bg-slate-400"></span> Volno
+        </span>
+        <span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1 font-bold">
+          <span class="w-2 h-2 rounded-full bg-rose-600"></span> Svátek
+        </span>
+      </div>
+
+      <!-- Calendar Render Zone -->
+      <div id="calendarContent" class="space-y-6">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 2: DOVOLENÁ (VACATION DASHBOARD) -->
+    <div id="tabVacationView" class="hidden space-y-4">
+      <div class="bg-md-surfaceContainerLow rounded-3xl p-6 shadow-sm border border-md-outlineVariant/40 text-center space-y-4">
+        <div>
+          <h2 class="text-xl font-bold text-md-onSurface">Moje dovolená 🌴</h2>
+          <p class="text-xs text-md-onSurfaceVariant mt-1">Přehled vyčerpané a zbývající dovolené pro tým <strong id="vacTeamLabel">Růžička</strong></p>
+        </div>
+
+        <!-- Big Circular Vacation Counter -->
+        <div class="relative w-36 h-36 mx-auto flex flex-col justify-center items-center rounded-full bg-emerald-50 border-4 border-emerald-500 shadow-md">
+          <span id="vacRemainingCount" class="text-4xl font-extrabold text-emerald-800 leading-none">25</span>
+          <span class="text-xs font-bold text-emerald-600 mt-1 uppercase tracking-wider">dní zbývá</span>
+        </div>
+
+        <!-- Vacation Breakdown Cards -->
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <div class="p-4 rounded-2xl bg-white border border-md-outlineVariant/40 text-center">
+            <span id="vacTotalAllowanceDisplay" class="text-2xl font-black text-md-onSurface block">25</span>
+            <span class="text-xs font-bold text-md-onSurfaceVariant">Celkový nárok (dny)</span>
+          </div>
+          <div class="p-4 rounded-2xl bg-white border border-md-outlineVariant/40 text-center">
+            <span id="vacUsedCount" class="text-2xl font-black text-amber-700 block">0</span>
+            <span class="text-xs font-bold text-md-onSurfaceVariant">Naplánováno / Vyčerpáno</span>
+          </div>
+        </div>
+
+        <!-- Adjust Annual Allowance Inline -->
+        <div class="p-4 rounded-2xl bg-md-surfaceContainer border border-md-outlineVariant/40 flex items-center justify-between gap-3 text-left">
+          <div>
+            <span class="text-xs font-bold text-md-onSurface block">Upravit roční nárok</span>
+            <span class="text-[11px] text-md-onSurfaceVariant">Standardní výměra dovolené</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="number" id="vacInputAllowance" min="0" max="60" value="25" onchange="updateAllowanceFromInput(this.value)" class="w-16 p-2 text-center text-sm font-bold bg-white rounded-xl border border-md-outlineVariant focus:outline-none focus:ring-2 focus:ring-md-primary">
+            <span class="text-xs font-bold text-md-onSurface">dní</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vacation List Card -->
+      <div class="bg-md-surfaceContainerLow rounded-3xl p-5 shadow-sm border border-md-outlineVariant/40 space-y-3">
+        <h3 class="text-sm font-bold text-md-onSurface flex items-center gap-2">
+          <span class="material-symbols-outlined text-emerald-600 text-lg">event_available</span>
+          Seznam označených dnů dovolené
+        </h3>
+        <div id="vacationDaysList" class="space-y-2">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: INBOX (ANNOUNCEMENTS & OVERTIME) -->
+    <div id="tabInboxView" class="hidden space-y-4">
+      <div class="bg-md-surfaceContainerLow rounded-3xl p-5 shadow-sm border border-md-outlineVariant/40">
+        <h2 class="text-lg font-bold text-md-onSurface mb-1">Inbox & Oznámení 📥</h2>
+        <p class="text-xs text-md-onSurfaceVariant mb-4">Informace o směnách a zaznamenaných přesčasech.</p>
+
+        <div id="inboxContentList" class="space-y-3">
+          <!-- Dynamically populated or Empty state -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: NASTAVENÍ (SETTINGS) -->
+    <div id="tabSettingsView" class="hidden space-y-4">
+      <div class="bg-md-surfaceContainerLow rounded-3xl p-5 shadow-sm border border-md-outlineVariant/40 space-y-5">
+        <div>
+          <h2 class="text-lg font-bold text-md-onSurface">Nastavení aplikace ⚙️</h2>
+          <p class="text-xs text-md-onSurfaceVariant">Správa výchozího týmu, nároku na dovolenou a dat.</p>
+        </div>
+
+        <!-- Team Preference -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-md-primary uppercase tracking-wider block">Vyberte váš Tým</label>
+          <div class="grid grid-cols-2 gap-2.5" id="settingsTeamButtons">
+            <!-- Dynamic Buttons -->
+          </div>
+        </div>
+
+        <hr class="border-md-outlineVariant/40">
+
+        <!-- Allowance setting -->
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <span class="text-sm font-bold text-md-onSurface block">Roční nárok na dovolenou</span>
+            <span class="text-xs text-md-onSurfaceVariant">Počet dní dovolené za kalendářní rok</span>
+          </div>
+          <input type="number" id="settingsVacAllowanceInput" value="25" onchange="updateAllowanceFromInput(this.value)" class="w-20 p-2.5 text-center font-bold text-sm bg-white rounded-xl border border-md-outlineVariant focus:ring-2 focus:ring-md-primary">
+        </div>
+
+        <hr class="border-md-outlineVariant/40">
+
+        <!-- Storage Reset -->
+        <div class="space-y-2">
+          <h3 class="text-sm font-bold text-md-onSurface">Správa paměti localStorage</h3>
+          <p class="text-xs text-md-onSurfaceVariant">Smazat všechny vlastní poznámky, označené dovolené a resetovat nastavení.</p>
+          <button onclick="clearUserData()" class="w-full py-3 px-4 rounded-2xl bg-rose-50 text-rose-700 hover:bg-rose-100 font-bold text-xs flex items-center justify-center gap-2 border border-rose-200 transition active:scale-98">
+            <span class="material-symbols-outlined text-base">delete</span>
+            Vynulovat všechna uložená data
+          </button>
+        </div>
+
+        <div class="pt-2 text-center text-xs text-md-onSurfaceVariant">
+          Směny Bosch 2026/2027 • Material Design 3
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- SPODNÍ NAVIGAČNÍ LIŠTA (Material 3 Bottom Navigation Bar) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-md-surfaceContainerHigh border-t border-md-outlineVariant/40 safe-bottom shadow-md-3">
+    <div class="max-w-md mx-auto px-4 h-16 flex items-center justify-around">
+      
+      <!-- 1. Kalendář / Směny -->
+      <button onclick="switchTab('calendar')" id="navCalendar" class="flex flex-col items-center gap-1 group w-16">
+        <div id="navCalendarIconBg" class="w-14 h-8 rounded-full bg-md-primaryContainer text-md-onPrimaryContainer flex items-center justify-center transition-all">
+          <span class="material-symbols-outlined text-xl">calendar_month</span>
+        </div>
+        <span class="text-[10px] font-bold text-md-onSurface" id="navCalendarLabel">Směny</span>
+      </button>
+
+      <!-- 2. Dovolená -->
+      <button onclick="switchTab('vacation')" id="navVacation" class="flex flex-col items-center gap-1 group w-16">
+        <div id="navVacationIconBg" class="w-14 h-8 rounded-full text-md-onSurfaceVariant flex items-center justify-center transition-all">
+          <span class="material-symbols-outlined text-xl">beach_access</span>
+        </div>
+        <span class="text-[10px] font-semibold text-md-onSurfaceVariant" id="navVacationLabel">Dovolená</span>
+      </button>
+
+      <!-- 3. Inbox -->
+      <button onclick="switchTab('inbox')" id="navInbox" class="flex flex-col items-center gap-1 group w-16">
+        <div id="navInboxIconBg" class="w-14 h-8 rounded-full text-md-onSurfaceVariant flex items-center justify-center transition-all">
+          <span class="material-symbols-outlined text-xl">inbox</span>
+        </div>
+        <span class="text-[10px] font-semibold text-md-onSurfaceVariant" id="navInboxLabel">Inbox</span>
+      </button>
+
+      <!-- 4. Nastavení -->
+      <button onclick="switchTab('settings')" id="navSettings" class="flex flex-col items-center gap-1 group w-16">
+        <div id="navSettingsIconBg" class="w-14 h-8 rounded-full text-md-onSurfaceVariant flex items-center justify-center transition-all">
+          <span class="material-symbols-outlined text-xl">settings</span>
+        </div>
+        <span class="text-[10px] font-semibold text-md-onSurfaceVariant" id="navSettingsLabel">Nastavení</span>
+      </button>
+
+    </div>
+  </nav>
+
+  <!-- EDIT DAY MODAL DIALOG (M3 Dialog) -->
+  <dialog id="editModal" class="rounded-3xl p-0 w-11/12 max-w-md shadow-md-3 bg-md-surfaceContainer border-0 backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm">
+    <div class="p-6">
+      <div class="flex justify-between items-start pb-3 border-b border-md-outlineVariant/40">
+        <div>
+          <span class="text-xs font-bold text-md-primary uppercase tracking-wider" id="modalTeamLabel">Tým: Růžička</span>
+          <h3 class="font-extrabold text-xl text-md-onSurface" id="modalDate">1.10.2026</h3>
+          <p class="text-xs font-semibold text-md-onSurfaceVariant mt-0.5" id="modalShiftInfo">Plánovaná směna: RANNÍ</p>
+        </div>
+        <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-md-surfaceContainerHigh text-md-onSurfaceVariant flex items-center justify-center font-bold text-sm">✕</button>
+      </div>
+
+      <div class="mt-5 space-y-4">
+        <!-- Vacation toggle -->
+        <label class="flex items-center gap-3 p-3.5 bg-md-surfaceContainerLow rounded-2xl border border-md-outlineVariant/50 cursor-pointer">
+          <input type="checkbox" id="modalVacation" class="w-5 h-5 accent-md-primary rounded">
+          <div>
+            <span class="text-sm font-bold text-md-onSurface block">🌴 Čerpání dovolené</span>
+            <span class="text-xs text-md-onSurfaceVariant block">Zapohledá den do vyčerpané dovolené</span>
+          </div>
+        </label>
+
+        <!-- Custom Comment / Overtime -->
+        <div>
+          <label class="block text-xs font-bold text-md-onSurfaceVariant mb-1.5">Komentář / Přesčas 📝</label>
+          <textarea id="modalNote" rows="3" placeholder="Např. Přesčas 2h, výměna směny..." class="w-full p-3 bg-md-surfaceContainerLow rounded-2xl border border-md-outlineVariant/50 text-sm focus:outline-none focus:ring-2 focus:ring-md-primary text-md-onSurface"></textarea>
+        </div>
+      </div>
+
+      <div class="mt-6 flex gap-2 justify-end">
+        <button onclick="deleteDayData()" class="px-4 py-2.5 text-xs font-bold text-rose-700 bg-rose-50 rounded-full hover:bg-rose-100 transition">Smazat</button>
+        <button onclick="closeModal()" class="px-4 py-2.5 text-xs font-bold text-md-onSurfaceVariant bg-md-surfaceContainerHigh rounded-full transition">Zrušit</button>
+        <button onclick="saveDayData()" class="px-5 py-2.5 text-xs font-bold text-md-onPrimary bg-md-primary hover:bg-indigo-700 rounded-full shadow-md-1 transition">Uložit</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- TEAM PICKER MODAL DIALOG -->
+  <dialog id="settingsModal" class="rounded-3xl p-0 w-11/12 max-w-md shadow-md-3 bg-md-surfaceContainer border-0 backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm">
+    <div class="p-6">
+      <div class="flex justify-between items-center pb-3 border-b border-md-outlineVariant/40">
+        <h3 class="font-extrabold text-lg text-md-onSurface">Vybrat Pracovní Tým</h3>
+        <button onclick="closeSettingsModal()" class="w-8 h-8 rounded-full bg-md-surfaceContainerHigh text-md-onSurfaceVariant flex items-center justify-center font-bold text-sm">✕</button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <p class="text-xs text-md-onSurfaceVariant">Zvolte skupinu pro zobrazení harmonogramu směn:</p>
+
+        <div class="grid grid-cols-2 gap-2.5" id="teamModalButtons">
+          <!-- Dynamic team buttons -->
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-2">
+        <button onclick="closeSettingsModal()" class="px-5 py-2.5 text-xs font-bold text-md-onPrimary bg-md-primary rounded-full shadow-md-1">Hotovo</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- JAVASCRIPT LOGIC ENGINE -->
+  <script>
+    // --- MASTER SHIFT DATA SET (OCTOBER 2026 - JUNE 2027) ---
+    const TEAMS = ['Němček', 'Bártl', 'Růžička', 'Sellner'];
+
+    const RAW_SHIFTS = {
+      '10.2026': {
+        'Němček': 'O,volno,R,R,R,volno,volno,volno,O,O,O,volno,R,R,R,R,volno,N,N,N,N,N,N,volno,O,O,O,R,R,R,R',
+        'Bártl': 'R,R,volno,N,N,N,N,N,N,N,volno,O,O,volno,volno,volno,R,R,R,R,volno,N,N,N,N,N,N,N,volno,O,O',
+        'Růžička': 'volno,volno,O,O,volno,R,R,R,R,volno,N,N,N,N,N,N,R,R,R,R,volno,O,O,O,volno,R,R,R,volno,R,R',
+        'Sellner': 'N,N,volno,volno,O,O,O,O,volno,R,R,R,R,volno,N,N,volno,O,O,O,O,R,R,R,R,N,N,N,N,N,N'
+      },
+      '11.2026': {
+        'Němček': 'R,R,volno,volno,volno,O,O,O,O,R,R,R,R,volno,N,N,N,N,N,N,volno,volno,O,O,O,O,O,R,R,R',
+        'Bártl': 'N,N,N,N,N,N,volno,O,O,O,O,O,R,R,N,N,N,N,N,N,volno,O,O,O,O,O,R,R,N,N',
+        'Růžička': 'O,volno,R,R,R,R,volno,N,N,N,N,N,N,volno,O,O,volno,R,R,R,O,O,O,volno,R,R,R,volno,volno,volno',
+        'Sellner': 'volno,O,O,O,O,volno,R,R,R,volno,volno,O,O,O,O,O,R,O,O,O,R,R,R,N,N,N,N,O,O,O'
+      },
+      '12.2026': {
+        'Němček': 'O,O,O,O,O,O,volno,R,R,R,R,R,R,N,N,N,N,N,N,O,O,O,O,R,R,R,R,R,R,R,R',
+        'Bártl': 'N,N,N,N,volno,volno,volno,O,O,O,O,R,R,R,N,N,N,N,N,O,O,O,O,R,R,R,R,R,R,R,R',
+        'Růžička': 'R,R,R,R,volno,N,N,N,N,N,N,volno,R,R,R,O,O,O,O,volno,R,R,R,R,R,R,N,N,N,N,N',
+        'Sellner': 'O,O,O,O,R,R,R,volno,volno,volno,O,O,O,O,R,R,R,R,N,N,N,N,N,N,N,N,O,O,O,O,O'
+      },
+      '1.2027': {
+        'Němček': 'O,O,O,volno,R,R,R,R,volno,N,N,N,N,N,N,volno,volno,O,O,O,O,O,volno,R,R,R,R,R,R,O,O',
+        'Bártl': 'N,volno,volno,O,O,O,O,O,R,R,R,R,R,R,R,O,O,O,O,O,O,O,O,N,N,N,N,N,N,N,N',
+        'Růžička': 'R,volno,volno,N,N,N,N,N,R,R,R,R,O,O,O,R,R,R,R,R,R,R,R,N,N,N,N,N,N,N,N',
+        'Sellner': 'O,R,R,R,volno,volno,volno,O,O,O,O,R,R,R,R,R,R,N,N,N,N,N,O,O,O,R,R,R,R,R,R'
+      },
+      '2.2027': {
+        'Němček': 'R,R,R,R,volno,N,N,N,N,N,N,volno,O,O,O,O,O,O,O,R,R,R,R,R,R,O,O,O',
+        'Bártl': 'O,O,O,O,O,R,R,R,O,O,O,O,O,O,O,O,O,R,R,N,N,N,N,N,N,N,R,R',
+        'Růžička': 'N,N,N,N,N,O,O,O,O,O,O,R,R,R,R,R,R,R,N,N,N,N,N,N,N,N,N,N',
+        'Sellner': 'R,R,R,R,O,O,O,R,R,R,R,N,N,N,N,N,N,N,O,O,O,O,R,R,R,R,R,R'
+      },
+      '3.2027': {
+        'Němček': 'R,R,R,R,volno,N,N,N,N,N,N,O,O,O,O,O,O,O,R,R,R,O,O,O,O,O,O,O,R,R,R',
+        'Bártl': 'R,R,R,R,O,R,R,R,O,O,O,O,O,O,O,R,R,O,O,N,N,N,N,N,N,N,N,N,N,N,N',
+        'Růžička': 'N,N,N,N,N,O,O,O,O,O,O,O,R,R,R,R,R,R,R,R,R,N,N,N,N,N,N,N,N,N,N',
+        'Sellner': 'R,R,R,R,O,O,O,R,R,R,R,N,N,N,N,N,N,N,O,O,O,O,R,R,R,N,N,N,N,N,N'
+      },
+      '4.2027': {
+        'Němček': 'R,R,R,R,R,R,R,R,R,volno,N,N,N,N,N,N,R,R,R,O,O,O,R,R,R,R,R,R,R,R',
+        'Bártl': 'O,R,R,R,O,O,O,O,O,O,O,O,O,O,O,N,N,N,N,N,N,N,N,O,O,O,O,O,O,O',
+        'Růžička': 'N,N,N,N,R,R,R,R,R,R,R,R,R,R,R,R,O,O,O,R,R,R,R,N,N,N,N,N,N,N',
+        'Sellner': 'N,O,O,O,R,R,R,R,N,N,N,N,N,N,N,O,O,O,O,O,O,O,O,R,R,R,R,R,R,O'
+      },
+      '5.2027': {
+        'Němček': 'R,R,R,R,R,R,R,O,O,O,O,O,O,O,R,R,R,R,O,O,O,O,O,R,R,R,R,O,O,O,O',
+        'Bártl': 'O,O,O,O,O,O,O,R,R,R,R,R,N,N,N,N,N,N,N,N,N,O,O,O,O,R,R,R,R,R,R',
+        'Růžička': 'R,R,R,R,R,R,R,R,R,R,R,R,O,O,O,R,R,R,R,R,R,N,N,N,N,N,N,R,R,R,R',
+        'Sellner': 'O,O,R,R,R,R,N,N,N,N,N,N,O,O,O,O,O,O,R,R,R,R,R,N,N,N,O,O,O,O,O'
+      },
+      '6.2027': {
+        'Němček': 'N,N,N,N,R,R,R,O,O,O,O,R,R,R,O,O,O,R,R,O,O,O,O,R,N,N,N,N,N,N',
+        'Bártl': 'O,O,O,O,O,O,O,R,R,R,R,N,N,N,N,N,N,N,N,O,O,O,R,R,R,R,R,R,R,R',
+        'Růžička': 'R,R,R,R,R,R,R,N,N,N,N,O,O,O,R,R,R,N,N,N,N,N,N,O,O,O,O,O,O,O',
+        'Sellner': 'R,R,R,R,N,N,N,N,N,N,N,O,O,O,O,O,O,R,R,R,R,R,N,N,O,O,O,R,R,R'
+      }
+    };
+
+    const HOLIDAYS = {
+      '28.10.26': 'Státní svátek',
+      '17.11.26': 'Den boje za svobodu',
+      '24.12.26': 'Štědrý den',
+      '25.12.26': '1. svátek vánoční',
+      '26.12.26': '2. svátek vánoční',
+      '1.1.27': 'Nový rok',
+      '26.3.27': 'Velký pátek',
+      '29.3.27': 'Velikonoční pondělí',
+      '1.5.27': 'Svátek práce',
+      '8.5.27': 'Den vítězství'
+    };
+
+    const MONTH_NAMES = [
+      'Říjen 2026', 'Listopad 2026', 'Prosinec 2026',
+      'Leden 2027', 'Únor 2027', 'Březen 2027',
+      'Duben 2027', 'Květen 2027', 'Červen 2027'
+    ];
+
+    const MONTH_KEYS = ['10.2026', '11.2026', '12.2026', '1.2027', '2.2027', '3.2027', '4.2027', '5.2027', '6.2027'];
+
+    // --- APPLICATION STATE ---
+    let selectedTeam = localStorage.getItem('bosch_user_team') || 'Růžička';
+    let vacationAllowance = parseInt(localStorage.getItem('bosch_vacation_allowance')) || 25;
+    let currentMonthIdx = 0;
+    let currentView = 'month'; // 'month' | 'year'
+    let currentTab = 'calendar'; // 'calendar' | 'vacation' | 'inbox' | 'settings'
+    let userDayData = JSON.parse(localStorage.getItem('bosch_user_notes') || '{}');
+    let activeEditingKey = null;
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+      updateTeamBadge();
+      renderMonthSlider();
+      renderCalendar();
+      updateVacationDashboard();
+      renderSettingsButtons();
+      renderInbox();
+    };
+
+    function updateTeamBadge() {
+      document.getElementById('currentTeamBadge').textContent = selectedTeam;
+      document.getElementById('vacTeamLabel').textContent = selectedTeam;
+    }
+
+    // --- TAB SWITCHING LOGIC ---
+    function switchTab(tab) {
+      currentTab = tab;
+
+      // Hide all tabs
+      document.getElementById('tabCalendarView').classList.add('hidden');
+      document.getElementById('tabVacationView').classList.add('hidden');
+      document.getElementById('tabInboxView').classList.add('hidden');
+      document.getElementById('tabSettingsView').classList.add('hidden');
+
+      // Reset bottom nav bar styling
+      ['navCalendar', 'navVacation', 'navInbox', 'navSettings'].forEach(id => {
+        const bg = document.getElementById(id + 'IconBg');
+        const lbl = document.getElementById(id + 'Label');
+        bg.className = 'w-14 h-8 rounded-full text-md-onSurfaceVariant flex items-center justify-center transition-all';
+        lbl.className = 'text-[10px] font-semibold text-md-onSurfaceVariant';
+      });
+
+      // Activate chosen tab
+      if (tab === 'calendar') {
+        document.getElementById('tabCalendarView').classList.remove('hidden');
+        document.getElementById('navCalendarIconBg').className = 'w-14 h-8 rounded-full bg-md-primaryContainer text-md-onPrimaryContainer flex items-center justify-center transition-all';
+        document.getElementById('navCalendarLabel').className = 'text-[10px] font-bold text-md-onSurface';
+      } else if (tab === 'vacation') {
+        document.getElementById('tabVacationView').classList.remove('hidden');
+        document.getElementById('navVacationIconBg').className = 'w-14 h-8 rounded-full bg-md-primaryContainer text-md-onPrimaryContainer flex items-center justify-center transition-all';
+        document.getElementById('navVacationLabel').className = 'text-[10px] font-bold text-md-onSurface';
+        updateVacationDashboard();
+      } else if (tab === 'inbox') {
+        document.getElementById('tabInboxView').classList.remove('hidden');
+        document.getElementById('navInboxIconBg').className = 'w-14 h-8 rounded-full bg-md-primaryContainer text-md-onPrimaryContainer flex items-center justify-center transition-all';
+        document.getElementById('navInboxLabel').className = 'text-[10px] font-bold text-md-onSurface';
+        renderInbox();
+      } else if (tab === 'settings') {
+        document.getElementById('tabSettingsView').classList.remove('hidden');
+        document.getElementById('navSettingsIconBg').className = 'w-14 h-8 rounded-full bg-md-primaryContainer text-md-onPrimaryContainer flex items-center justify-center transition-all';
+        document.getElementById('navSettingsLabel').className = 'text-[10px] font-bold text-md-onSurface';
+      }
+    }
+
+    // --- VIEW SWITCHER (MONTH / YEAR) ---
+    function setView(view) {
+      currentView = view;
+      const btnMonth = document.getElementById('btnMonthView');
+      const btnYear = document.getElementById('btnYearView');
+
+      if (view === 'month') {
+        btnMonth.className = 'px-3 py-1.5 rounded-full bg-md-primaryContainer text-md-onPrimaryContainer font-bold transition-all shadow-sm';
+        btnYear.className = 'px-3 py-1.5 rounded-full text-md-onSurfaceVariant transition-all';
+        document.getElementById('monthSliderWrapper').classList.remove('hidden');
+      } else {
+        btnYear.className = 'px-3 py-1.5 rounded-full bg-md-primaryContainer text-md-onPrimaryContainer font-bold transition-all shadow-sm';
+        btnMonth.className = 'px-3 py-1.5 rounded-full text-md-onSurfaceVariant transition-all';
+        document.getElementById('monthSliderWrapper').classList.add('hidden');
+      }
+
+      renderCalendar();
+    }
+
+    // --- MONTH SLIDER CHIPS ---
+    function renderMonthSlider() {
+      const container = document.getElementById('monthSliderWrapper');
+      container.innerHTML = '';
+
+      MONTH_NAMES.forEach((name, idx) => {
+        const btn = document.createElement('button');
+        const isActive = idx === currentMonthIdx;
+        btn.className = `px-3.5 py-1.5 rounded-full whitespace-nowrap transition-all ${
+          isActive 
+            ? 'bg-md-primary text-md-onPrimary shadow-md-1 font-bold' 
+            : 'bg-md-surfaceContainerLow text-md-onSurfaceVariant border border-md-outlineVariant/50 hover:bg-md-surfaceContainer'
+        }`;
+        btn.textContent = name;
+        btn.onclick = () => {
+          currentMonthIdx = idx;
+          renderMonthSlider();
+          renderCalendar();
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    // --- CALENDAR RENDER ENGINE ---
+    function renderCalendar() {
+      const cal = document.getElementById('calendarContent');
+      cal.innerHTML = '';
+
+      if (currentView === 'month') {
+        cal.appendChild(createMonthCard(currentMonthIdx));
+      } else {
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+        MONTH_KEYS.forEach((_, idx) => {
+          grid.appendChild(createMonthCard(idx, true));
+        });
+        cal.appendChild(grid);
+      }
+    }
+
+    function createMonthCard(monthIdx, isMini = false) {
+      const monthKey = MONTH_KEYS[monthIdx];
+      const monthTitle = MONTH_NAMES[monthIdx];
+      const rawString = RAW_SHIFTS[monthKey][selectedTeam];
+      const shiftsArr = rawString.split(',');
+
+      const [mStr, yStr] = monthKey.split('.');
+      const monthNumber = parseInt(mStr);
+      const yearNumber = parseInt(yStr);
+
+      const firstDayDate = new Date(yearNumber, monthNumber - 1, 1);
+      let startDay = firstDayDate.getDay();
+      startDay = (startDay === 0) ? 6 : startDay - 1; // Mon=0, Sun=6
+
+      const card = document.createElement('div');
+      card.className = 'bg-md-surfaceContainerLow rounded-3xl p-4 shadow-sm border border-md-outlineVariant/40';
+
+      let html = `
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="font-bold text-md-onSurface ${isMini ? 'text-base' : 'text-lg'}">${monthTitle}</h2>
+          <span class="text-xs font-bold px-3 py-1 rounded-full bg-md-primaryContainer text-md-onPrimaryContainer">${selectedTeam}</span>
+        </div>
+        <div class="grid grid-cols-7 gap-1 text-center font-bold text-[11px] text-md-onSurfaceVariant mb-2">
+          <div>Po</div><div>Út</div><div>St</div><div>Čt</div><div>Pá</div><div>So</div><div>Ne</div>
+        </div>
+        <div class="grid grid-cols-7 gap-1.5">
+      `;
+
+      // Blank slots
+      for (let i = 0; i < startDay; i++) {
+        html += `<div class="aspect-square rounded-2xl bg-md-surfaceContainer/30"></div>`;
+      }
+
+      // Days
+      shiftsArr.forEach((shiftCode, index) => {
+        const dayNum = index + 1;
+        const dateKey = `${dayNum}.${monthKey}`;
+        const holidayName = HOLIDAYS[dateKey];
+        const dayUserData = userDayData[dateKey] || {};
+
+        let shiftText = shiftCode;
+        let badgeStyle = 'background-color: #ffffff; color: #49454f; border: 1.5px solid #e0e0e0;';
+
+        if (shiftCode === 'R') {
+          shiftText = 'RANNÍ';
+          badgeStyle = 'background-color: #e6f4ea; color: #137333; border: 1.5px solid #a8dab5;';
+        } else if (shiftCode === 'O') {
+          shiftText = 'ODPO';
+          badgeStyle = 'background-color: #fef7e0; color: #b06000; border: 1.5px solid #ffd8a8;';
+        } else if (shiftCode === 'N') {
+          shiftText = 'NOČNÍ';
+          badgeStyle = 'background-color: #e8f0fe; color: #1a73e8; border: 1.5px solid #adc6ff;';
+        } else if (shiftCode === 'volno') {
+          shiftText = 'VOLNO';
+        }
+
+        const extraClasses = [
+          holidayName ? 'is-holiday' : '',
+          dayUserData.v ? 'is-vacation' : '',
+          dayUserData.n ? 'has-note' : ''
+        ].join(' ');
+
+        html += `
+          <button onclick="openEditModal('${dateKey}', '${shiftText}')" style="${badgeStyle}" 
+            class="aspect-square rounded-2xl p-1 flex flex-col justify-between items-start text-left relative transition active:scale-95 shadow-sm md-ripple ${extraClasses} ${isMini ? 'min-h-[46px]' : 'min-h-[58px]'}">
+            <span class="font-extrabold ${isMini ? 'text-xs' : 'text-sm'} leading-none">${dayNum}</span>
+            <span class="font-extrabold ${isMini ? 'text-[8px]' : 'text-[9px]'} uppercase tracking-tighter opacity-90">${shiftText}</span>
+          </button>
+        `;
+      });
+
+      html += `</div>`;
+      card.innerHTML = html;
+      return card;
+    }
+
+    // --- VACATION DASHBOARD LOGIC ---
+    function updateVacationDashboard() {
+      let usedCount = 0;
+      const vacationList = [];
+
+      for (const dateKey in userDayData) {
+        if (userDayData[dateKey].v) {
+          usedCount++;
+          vacationList.push({ date: dateKey, note: userDayData[dateKey].n || '' });
+        }
+      }
+
+      const remaining = Math.max(0, vacationAllowance - usedCount);
+
+      document.getElementById('vacRemainingCount').textContent = remaining;
+      document.getElementById('vacTotalAllowanceDisplay').textContent = vacationAllowance;
+      document.getElementById('vacUsedCount').textContent = usedCount;
+      document.getElementById('vacInputAllowance').value = vacationAllowance;
+      document.getElementById('settingsVacAllowanceInput').value = vacationAllowance;
+
+      // Render Vacation List
+      const listContainer = document.getElementById('vacationDaysList');
+      listContainer.innerHTML = '';
+
+      if (vacationList.length === 0) {
+        listContainer.innerHTML = `
+          <div class="p-4 text-center text-xs text-md-onSurfaceVariant bg-white rounded-2xl border border-md-outlineVariant/30">
+            Zatím nemáte naplánovanou žádnou dovolenou. Klikněte na jakýkoliv den v kalendáři a označte jej jako dovolenou. 🌴
+          </div>
+        `;
+      } else {
+        vacationList.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'p-3 bg-white rounded-2xl border border-md-outlineVariant/40 flex justify-between items-center text-xs';
+          div.innerHTML = `
+            <div class="flex items-center gap-2.5">
+              <span class="text-base">🌴</span>
+              <div>
+                <strong class="font-bold text-md-onSurface block text-sm">${item.date}</strong>
+                ${item.note ? `<span class="text-md-onSurfaceVariant block">${item.note}</span>` : ''}
+              </div>
+            </div>
+            <button onclick="openEditModal('${item.date}', 'DOVOLENÁ')" class="px-3 py-1 bg-md-surfaceContainer text-md-primary font-bold rounded-xl hover:bg-md-surfaceContainerHigh">Upravit</button>
+          `;
+          listContainer.appendChild(div);
+        });
+      }
+    }
+
+    function updateAllowanceFromInput(val) {
+      vacationAllowance = parseInt(val) || 25;
+      localStorage.setItem('bosch_vacation_allowance', vacationAllowance);
+      updateVacationDashboard();
+    }
+
+    // --- INBOX TAB LOGIC ---
+    function renderInbox() {
+      const container = document.getElementById('inboxContentList');
+      container.innerHTML = '';
+
+      // Collect user notes/overtimes
+      const notesList = [];
+      for (const dateKey in userDayData) {
+        if (userDayData[dateKey].n) {
+          notesList.push({ date: dateKey, note: userDayData[dateKey].n, isVac: userDayData[dateKey].v });
+        }
+      }
+
+      // Default system message
+      const systemCard = document.createElement('div');
+      systemCard.className = 'p-4 rounded-2xl bg-white border border-md-outlineVariant/40 space-y-1';
+      systemCard.innerHTML = `
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-md-primary"></span>
+          <span class="text-xs font-bold text-md-primary">Systémové Oznámení</span>
+        </div>
+        <h4 class="text-sm font-bold text-md-onSurface">Rozpis směn Bosch 2026 / 2027 je aktivní</h4>
+        <p class="text-xs text-md-onSurfaceVariant">Harmonogram směn pro týmy Němček, Bártl, Růžička a Sellner platí od 1. 10. 2026 do 30. 6. 2027.</p>
+      `;
+      container.appendChild(systemCard);
+
+      if (notesList.length > 0) {
+        notesList.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'p-4 rounded-2xl bg-white border border-md-outlineVariant/40 space-y-1';
+          card.innerHTML = `
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-md-primary flex items-center gap-1">📝 Poznámka / Přesčas</span>
+              <span class="text-md-onSurfaceVariant font-bold">${item.date}</span>
+            </div>
+            <p class="text-xs font-medium text-md-onSurface">${item.note}</p>
+          `;
+          container.appendChild(card);
+        });
+      }
+    }
+
+    // --- EDIT DAY MODAL HANDLERS ---
+    function openEditModal(dateKey, shiftText) {
+      activeEditingKey = dateKey;
+      const data = userDayData[dateKey] || {};
+
+      document.getElementById('modalTeamLabel').textContent = `Tým: ${selectedTeam}`;
+      document.getElementById('modalDate').textContent = `${dateKey}`;
+      document.getElementById('modalShiftInfo').textContent = `Plánovaná směna: ${shiftText}`;
+      document.getElementById('modalVacation').checked = !!data.v;
+      document.getElementById('modalNote').value = data.n || '';
+
+      document.getElementById('editModal').showModal();
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').close();
+    }
+
+    function saveDayData() {
+      if (!activeEditingKey) return;
+      const vac = document.getElementById('modalVacation').checked;
+      const note = document.getElementById('modalNote').value.trim();
+
+      if (vac || note) {
+        userDayData[activeEditingKey] = { v: vac, n: note };
+      } else {
+        delete userDayData[activeEditingKey];
+      }
+
+      localStorage.setItem('bosch_user_notes', JSON.stringify(userDayData));
+      closeModal();
+      renderCalendar();
+      updateVacationDashboard();
+      if (currentTab === 'inbox') renderInbox();
+    }
+
+    function deleteDayData() {
+      if (!activeEditingKey) return;
+      delete userDayData[activeEditingKey];
+      localStorage.setItem('bosch_user_notes', JSON.stringify(userDayData));
+      closeModal();
+      renderCalendar();
+      updateVacationDashboard();
+      if (currentTab === 'inbox') renderInbox();
+    }
+
+    // --- SETTINGS & TEAM MODAL ---
+    function openSettingsModal() {
+      renderTeamModalButtons();
+      document.getElementById('settingsModal').showModal();
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').close();
+    }
+
+    function renderTeamModalButtons() {
+      const container = document.getElementById('teamModalButtons');
+      container.innerHTML = '';
+
+      TEAMS.forEach(team => {
+        const isSel = team === selectedTeam;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => selectTeam(team);
+        btn.className = `p-3.5 rounded-2xl border-2 font-bold text-sm transition-all ${
+          isSel 
+            ? 'border-md-primary bg-md-primaryContainer text-md-onPrimaryContainer shadow-sm' 
+            : 'border-md-outlineVariant/50 bg-md-surfaceContainerLow text-md-onSurfaceVariant hover:bg-md-surfaceContainer'
+        }`;
+        btn.textContent = team;
+        container.appendChild(btn);
+      });
+    }
+
+    function renderSettingsButtons() {
+      const container = document.getElementById('settingsTeamButtons');
+      if (!container) return;
+      container.innerHTML = '';
+
+      TEAMS.forEach(team => {
+        const isSel = team === selectedTeam;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => selectTeam(team);
+        btn.className = `p-3.5 rounded-2xl border-2 font-bold text-sm transition-all ${
+          isSel 
+            ? 'border-md-primary bg-md-primaryContainer text-md-onPrimaryContainer shadow-sm' 
+            : 'border-md-outlineVariant/50 bg-md-surfaceContainerLow text-md-onSurfaceVariant hover:bg-md-surfaceContainer'
+        }`;
+        btn.textContent = team;
+        container.appendChild(btn);
+      });
+    }
+
+    function selectTeam(team) {
+      selectedTeam = team;
+      localStorage.setItem('bosch_user_team', selectedTeam);
+      updateTeamBadge();
+      renderTeamModalButtons();
+      renderSettingsButtons();
+      renderCalendar();
+      updateVacationDashboard();
+    }
+
+    function clearUserData() {
+      if (confirm('Opravdu chcete smazat všechny vaše uložené poznámky, dovolené a resetovat nastavení?')) {
+        userDayData = {};
+        vacationAllowance = 25;
+        localStorage.removeItem('bosch_user_notes');
+        localStorage.removeItem('bosch_vacation_allowance');
+        renderCalendar();
+        updateVacationDashboard();
+        renderInbox();
+      }
+    }
+  </script>
+</body>
+</html>
