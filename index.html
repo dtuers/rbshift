@@ -130,7 +130,7 @@ const dtxt=a=>a.length<=4?a.map(sh).join(', '):sh(a[0])+'–'+sh(a[a.length-1])+
 const tmin=v=>{const [h,m]=v.split(':').map(Number);return h*60+m};
 const fm=m=>`${Math.floor(m/60)} h${m%60?' '+m%60+' min':''}`;
 // ---------- cloud (Supabase)
-const CFG={url:'https://wlyladcebvyojixvplny.supabase.co',key:'sb_publishable_9QUtWf1QFSmj8EaQY3u5Yw_nYr1onJG',vapid:'BFEi9TEbb3FrDdm-sYJEuRVi3rj-WU0toOvH8faughY6J_TiaQU40mNo97JRlCSBo5GHurU_vIQRQG1zufBND_4'};
+const CFG={url:'https://wlyladcebvyojixvplny.supabase.co',key:'sb_publishable_9QUtWf1QFSmj8EaQY3u5Yw_nYr1onJG',vapid:'BHEfeuKnGLhx751olPDI-fWc61JxBTuWXgqH56a2YiEs5ATUoHq-d2wBSySw_jLIzupZgMfEgsCP0S-1g_FAWaw'};
 const sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true,autoRefreshToken:true}});
 const hex=s=>[...new TextEncoder().encode(s)].map(b=>b.toString(16).padStart(2,'0')).join('');
 const emailOf=u=>'u'+hex(u)+'@rbshift.example.com';
