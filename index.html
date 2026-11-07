@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RB SHIFT – Směnný provoz</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="theme-color" content="#C8000A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RB SHIFT">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{--ink:#1B2733;--mut:#4A5560;--line:#D0D5DA;--bg:#EEF1F4;--red:#C8000A;--ok:#00663A;--warn:#8A5A00;
+--bosch:linear-gradient(90deg,#ED0007 0%,#9E2896 25%,#007BC0 50%,#18837E 75%,#00884A 100%)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#D9DEE3;display:flex;justify-content:center}
+.app{width:100%;max-width:440px;height:100%;max-height:900px;margin:auto;background:var(--bg);display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.18);position:relative}
+@media(max-width:480px){.app{max-height:none;box-shadow:none}}
+header{background:#fff;padding:14px 20px 12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;letter-spacing:.04em}
+.brand b{color:var(--red)}.brand small{font-weight:400;font-size:12px;color:var(--mut);letter-spacing:0}
+h1{margin:10px 0 2px;font-size:24px;line-height:28px}
+.sub{font-size:13px;color:var(--mut)}
+main{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.card{background:#fff;border:1px solid var(--line);border-radius:4px;padding:12px 14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lbl{font-size:12px;color:var(--mut)}.big{font-size:28px;font-weight:700}
+.meta{font-size:13px;color:var(--mut);margin:3px 0 10px}
+.bar{height:8px;background:#DDE1E5;border-radius:4px;margin-top:8px}.bar i{display:block;height:8px;border-radius:4px;background:linear-gradient(90deg,#007BC0,#18837E)}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid #007BC0;outline-offset:2px}
+.btn{min-height:44px;padding:0 16px;font-size:14px;font-weight:700;border-radius:2px;background:var(--red);color:#fff;border:2px solid var(--red)}
+.btn.sec{background:#fff;color:var(--ink);border-color:var(--ink)}
+.fld textarea{min-height:130px;font:12px/1.4 monospace;color:var(--ink);border:1px solid #8A949E;border-radius:2px;padding:8px;background:#fff;resize:vertical;width:100%}
+.btn.blk:disabled{background:#EEF1F4;color:#4A5560;border-color:#8A949E}
+.btn:disabled{background:#fff;color:var(--ok);border-color:var(--ok);cursor:default}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{min-height:44px;padding:0 14px;border-radius:22px;font-size:13px;font-weight:600;background:#fff;color:var(--ink);border:1px solid #8A949E}
+.chip[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tag{font-size:12px;font-weight:700}.ok{color:var(--ok)}.warn{color:var(--warn)}.mut{color:var(--mut)}
+.act{background:#fff;border:1px solid var(--line);border-top:4px solid var(--c);border-radius:4px;min-height:64px;padding:10px 14px;text-align:left;color:var(--ink);width:100%}
+.act b{display:block;font-size:16px}.act span{font-size:13px;color:var(--mut)}
+h2{margin:4px 0 0;font-size:13px;color:var(--mut)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .h{font-size:12px;color:var(--mut)}
+.day{padding:0;border-radius:2px;font-size:14px;color:var(--ink)}
+nav{display:flex;background:#fff;border-top:1px solid var(--line)}
+nav button{flex:1;min-height:56px;background:#fff;border:0;border-top:3px solid transparent;color:var(--mut);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+nav button[aria-selected=true]{color:var(--red);border-top-color:var(--red)}
+.line{height:8px;background:var(--bosch);flex:none}
+
+.cal{gap:4px}.cal .h{font-size:12px;color:var(--mut);padding-bottom:2px}
+.day{position:relative;min-height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;border:1px solid var(--line);background:#fff}
+.day small{font-size:10px;font-weight:700;margin-top:2px}
+.day.R,.mc.R{background:#CFEBCB}.day.O,.mc.O{background:#FFD8A8}.day.N,.mc.N{background:#007BC0;color:#fff;border-color:#007BC0}
+.day.hol{border:2px solid #ED0007}
+.day.sel{box-shadow:inset 0 0 0 3px var(--ink);font-weight:700;background-clip:padding-box}
+.day.R.sel,.day.O.sel{color:var(--ink)}.day.N.sel{color:#fff;box-shadow:inset 0 0 0 3px #fff,0 0 0 2px var(--ink)}
+.day:disabled{cursor:default}.day.free{background:#fff}
+.dot{position:absolute;top:2px;right:2px;width:11px;height:11px;border-radius:50%;border:2px solid #fff;box-sizing:border-box}
+.dot.dov{background:#00884A}.dot.dovp{background:#fff;border-color:#00884A}.dot.nem{background:#ED0007}.dot.ocr{background:#9E2896}
+.leg{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--mut);margin-top:10px;align-items:center}
+.leg span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:14px;height:14px;border-radius:2px;border:1px solid var(--line);display:inline-block}
+.ld{width:10px;height:10px;border-radius:50%;display:inline-block}
+.mn{width:44px;height:44px;border:1px solid #8A949E;background:#fff;border-radius:2px;font-size:20px;color:var(--ink)}
+
+.day.today,.mc.today{font-weight:700;color:var(--ink);border-color:var(--ink)}
+.day.R.today,.mc.R.today{background:#62C255}.day.O.today,.mc.O.today{background:#FF9F2E}
+.day.N.today,.mc.N.today{background:#004E7C;color:#fff}.day.free.today,.mc.free.today{background:var(--ink);color:#fff}
+.day.hol.today,.mc.hol.today{border-color:#ED0007}
+.mg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.mg .card{padding:8px}
+.mh{width:100%;min-height:44px;text-align:left;background:none;border:0;font-size:14px;font-weight:700;color:var(--ink);padding:0 2px}
+.mc{position:relative;height:24px;font-size:10px;display:flex;align-items:center;justify-content:center;border:1px solid transparent;background:#fff;border-radius:2px}
+.mc.hol{border:2px solid #ED0007}.mc .dot{width:8px;height:8px;border-width:1px;top:0;right:0}
+.mg .cal{gap:2px}.mg .cal .h{font-size:10px}
+.ov{position:absolute;inset:0;background:rgba(27,39,51,.55);display:flex;align-items:flex-end;z-index:5}
+.sheet{background:#fff;width:100%;padding:18px 16px 20px;border-top:4px solid var(--c);display:flex;flex-direction:column;gap:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet label{font-size:13px;color:var(--mut);display:flex;flex-direction:column;gap:4px}
+.sheet input{min-height:44px;font:16px Arial,sans-serif;color:var(--ink);border:1px solid #8A949E;border-radius:2px;padding:0 8px}
+.toast{position:absolute;left:16px;right:16px;bottom:84px;background:var(--ink);color:#fff;padding:12px 14px;border-radius:4px;font-size:14px;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+.toast.on{opacity:1;transform:none}
+.bdg{position:absolute;top:-6px;right:-12px;min-width:18px;height:18px;border-radius:9px;background:#C8000A;color:#fff;font:700 11px Arial;font-style:normal;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.bad{color:#C8000A}
+.fld{display:flex;flex-direction:column;gap:10px}.fld label,.card select{font-size:13px;color:var(--mut)}
+.fld label{display:flex;flex-direction:column;gap:4px}
+.fld input,.fld select,.sheet select{min-height:44px;font:16px Arial,sans-serif;color:var(--ink);border:1px solid #8A949E;border-radius:2px;padding:0 8px;background:#fff}
+.sheet select{width:100%}
+.day.canc,.day.R.canc,.day.O.canc,.day.N.canc{background:repeating-linear-gradient(45deg,#fff 0 4px,#F6D5D7 4px 8px);border:2px dashed #C8000A;color:#C8000A}
+.day.canc small{color:#C8000A;font-size:12px}
+.mc.canc,.mc.R.canc,.mc.O.canc,.mc.N.canc{background:#F6D5D7;border:2px dashed #C8000A;color:#C8000A}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<div class="brand"><span>RB <b>SHIFT</b></span><small id="who"></small></div>
+<h1 id="t"></h1><div class="sub" id="s"></div>
+</header>
+<main id="m"></main>
+<nav role="tablist" aria-label="Hlavní navigace" id="nav"></nav>
+<div class="line"></div>
+<div class="toast" id="toast" role="status"></div>
+<div id="dlg"></div>
+</div>
+<script>
+let SH={"Němček":{"2026-10":"OO-RRRR-NNNNNN--OOOORRRROOO-OOO","2026-11":"RR---OOO-RRRR-NNNNNN--OOOO-RRR","2026-12":"---OOO-RRRR-NNNNNN--OOOO-RRR---","2027-01":"OOO-RRRR-NNNNNN--OOOO-RRR---OOO","2027-02":"--OOO-RRRR-NNNNNN--OOOO-RRR-","2027-03":"OOO-RRRR-NNNNNN--OOOO-RRR--N---","2027-04":"OOO---RRRR-NNNNNN--OOOO-RRR---","2027-05":"--OOO-RRRR-NNNNNN--OOOO-RRR----","2027-06":"--OOOO-RRRR-NNNNNN--OOOO-RRR--","2027-07":"--OOOO-RRRR-NNNNNN--OOOO-RRR---","2027-08":"-OOOO-RRRR-NNNNNN--OOOO-RRR----","2027-09":"-OOOO-RRRR-NNNNNN--OOOO-RRR---","2027-10":"-OOOO-RRRR-NNNNNN--OOOO-RRR----","2027-11":"-OOOO-RRRR-NNNNNN--OOOO-RRR---","2027-12":"-OOOO-RRRR-NNNNNN--OOOO-RRR----"},"Bártl":{"2026-10":"NN-OOOORRRR-NNNNRRRRNNNN-OOONNN","2026-11":"NNNNNN--OOOO-RRR---OOO-RRRR---","2026-12":"OOO-RRR---OOO-RRRR-NNNNNN--OOOO","2027-01":"N--OOOO-RRR---OOO-RRRR-NNNNNN--","2027-02":"N--OOOO-RRR---OOO-RRRR-NNNNN","2027-03":"---RRR-OOOO-NNNNNN--OOO-RRRR---","2027-04":"--OOOO-RRR--NNNNNN--OOO-RRRR--","2027-05":"---OOOO-RRR--NNNNNN--OOO-RRRR--","2027-06":"---OOO-RRRR--NNNNNN--OOO-RRRR-","2027-07":"--OOOO-RRR--NNNNNN--OOO-RRRR---","2027-08":"--OOOO-RRR--NNNNNN--OOO-RRRR---","2027-09":"--OOOO-RRR--NNNNNN--OOO-RRRR--","2027-10":"--OOOO-RRR--NNNNNN--OOO-RRRR---","2027-11":"--OOOO-RRR--NNNNNN--OOO-RRRR--","2027-12":"--OOOO-RRR--NNNNNN--OOO-RRRR---"},"Růžička":{"2026-10":"R-NNNNN---OOOORRRR-OOO-RRRRR-NN","2026-11":"-RRRR--NNNNNN--OOOO-RRR---OOO-","2026-12":"RRRR-NNNNNN--OOOO-RRR---OOO-RRR","2027-01":"R-NNNNNN--OOOO-RRR---OOO-RRRR--","2027-02":"OOO-RRR-NNNNNN--OOOO-RRRR---","2027-03":"NN--OOOO-RRR---OOO-RRRR-NNNNNN-","2027-04":"RRR--NNNNNN--OOOO-RRR---OOO-RR","2027-05":"R-NNNNNN--OOOO-RRR---OOO-RRRR--","2027-06":"-RRRR-NNNNNN--OOOO-RRR---OOO-R","2027-07":"RR-NNNNNN--OOOO-RRR---OOO-RRRR-","2027-08":"-RRRR-NNNNNN--OOOO-RRR---OOO-RR","2027-09":"RR-NNNNNN--OOOO-RRR---OOO-RRRR","2027-10":"-RRRR-NNNNNN--OOOO-RRR---OOO-RR","2027-11":"RR-NNNNNN--OOOO-RRR---OOO-RRRR","2027-12":"-RRRR-NNNNNN--OOOO-RRR---OOO-RR"},"Sellner":{"2026-10":"-RRR---OOOORRRRNNNNNN-OOORRRRR-","2026-11":"-OOOO-RRR---OOO-RRRR-NNNNNN--O","2026-12":"NNNN--OOOO-RRR---OOO-RRRR-NNNNN","2027-01":"-RRR---OOO-RRRR-NNNNNN--OOOO---","2027-02":"RRR---OOO-RRRR-NNNNNN--OOOO-","2027-03":"--OOOO-RRRR--NNNNNN--OOO-RRRR--","2027-04":"---RRRR-OOOO-NNNNNN--OOO-RRRR-","2027-05":"-RRR--OOOO-RRRR-NNNNNN--OOO-R--","2027-06":"RRR---OOOO-RRRR-NNNNNN--OOO-R-","2027-07":"--RRRR-OOOO-RRR-NNNNNN--OOO-RR-","2027-08":"--RRRR-OOOO-RRR-NNNNNN--OOO-RR-","2027-09":"--RRRR-OOOO-RRR-NNNNNN--OOO-R-","2027-10":"--RRRR-OOOO-RRR-NNNNNN--OOO-RR-","2027-11":"--RRRR-OOOO-RRR-NNNNNN--OOO-R-","2027-12":"--RRRR-OOOO-RRR-NNNNNN--OOO-RR-"}};
+let HN={"2026-09-28":"Den české státnosti","2026-10-28":"Den vzniku samostatného ČSR","2026-11-17":"Den boje za svobodu","2026-12-24":"Štědrý den","2026-12-25":"1. svátek vánoční","2026-12-26":"2. svátek vánoční","2027-01-01":"Nový rok","2027-03-26":"Velký pátek","2027-03-29":"Velikonoční pondělí","2027-05-01":"Svátek práce","2027-05-08":"Den vítězství","2027-07-05":"Den věrozvěstů","2027-07-06":"Upálení J. Husa","2027-09-28":"Den české státnosti","2027-10-28":"Den vzniku ČSR","2027-11-17":"Den boje za svobodu","2027-12-24":"Štědrý den","2027-12-25":"1. svátek vánoční","2027-12-26":"2. svátek vánoční"};
+const TEAMS=['Němček','Bártl','Růžička','Sellner'];
+const MN=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+const WD=['Ne','Po','Út','St','Čt','Pá','So'],SN={R:'ranní',O:'odpolední',N:'noční'};
+const pad=n=>String(n).padStart(2,'0'),key=(y,m,d)=>y+'-'+pad(m+1)+'-'+pad(d);
+const NOW=new Date(),TD=key(NOW.getFullYear(),NOW.getMonth(),NOW.getDate());
+const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const $=id=>document.getElementById(id),uid=()=>Math.random().toString(36).slice(2,9);
+const NAMEOK=/^[\p{L} .-]{2,30}$/u;
+const shiftOf=(t,y,m,d)=>{const s=(SH[t]||{})[y+'-'+pad(m+1)],c=s&&s[d-1];return c&&c!='-'?c:null};
+const sh=k=>{const p=k.split('-');return +p[2]+'. '+ +p[1]+'.'};
+const dl=k=>{const [y,m,d]=k.split('-').map(Number);return WD[new Date(y,m-1,d).getDay()]+' '+d+'. '+m+'.'};
+const dtxt=a=>a.length<=4?a.map(sh).join(', '):sh(a[0])+'–'+sh(a[a.length-1])+' ('+a.length+' dní)';
+const tmin=v=>{const [h,m]=v.split(':').map(Number);return h*60+m};
+const fm=m=>`${Math.floor(m/60)} h${m%60?' '+m%60+' min':''}`;
+// ---------- cloud (Supabase)
+const CFG={url:'https://wlyladcebvyojixvplny.supabase.co',key:'sb_publishable_9QUtWf1QFSmj8EaQY3u5Yw_nYr1onJG',vapid:'BFEi9TEbb3FrDdm-sYJEuRVi3rj-WU0toOvH8faughY6J_TiaQU40mNo97JRlCSBo5GHurU_vIQRQG1zufBND_4'};
+const sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true,autoRefreshToken:true}});
+const hex=s=>[...new TextEncoder().encode(s)].map(b=>b.toString(16).padStart(2,'0')).join('');
+const emailOf=u=>'u'+hex(u)+'@rbshift.example.com';
+const SH0=JSON.parse(JSON.stringify(SH)),HN0=JSON.parse(JSON.stringify(HN));
+const TYPES0=[{id:'nem',name:'Nahlásit nemoc',desc:'Informuje vedoucího směny',color:'#ED0007',dot:true},{id:'ocr',name:'OČR – ošetřování člena rodiny',desc:'Žádost o pracovní volno',color:'#9E2896',dot:true},{id:'lek',name:'Návštěva lékaře',desc:'Uvolnění na vyšetření',color:'#007BC0',dot:false},{id:'nv',name:'Náhradní volno',desc:'Čerpání náhradního volna',color:'#18837E',dot:true}];
+let DB={u:{},qr:{},reqs:[],notif:{},offers:[],cancel:[],types:TYPES0.map(t=>({...t})),cfg:{ot:20,rest:8,max:16},sh:SH,hn:HN};
+const typeOf=id=>DB.types.find(t=>t.id==id)||{name:'Jiné',color:'#8A949E',dot:false};
+const dotH=v=>v=='dov'||v=='dovp'?`<i class="dot ${v}"></i>`:`<i class="dot" style="background:${typeOf(v).color}"></i>`;
+let ME=null,UID=null,BOOT=true,SNAP=new Map(),OUTQ=[],PEND=0,PT=null,needR=false,CH=null;
+function docsOf(){const m=new Map(),add=(kind,id,team,owner,ukey,data)=>m.set(kind+':'+id,{kind,id:String(id),team:team??null,owner:owner||null,ukey:ukey||null,data});
+DB.reqs.forEach(r=>add('req',r.id,r.team,DB.u[r.user]&&DB.u[r.user].id,r.user,r));
+DB.offers.forEach(o=>add('offer',o.id,o.team,null,null,o));
+DB.cancel.forEach(c=>add('cancel',c.id,c.team,null,null,c));
+DB.types.forEach(t=>add('type',t.id,null,null,null,t));
+add('cfg','cfg',null,null,null,DB.cfg);
+Object.keys(DB.sh).forEach(t=>add('sh',t,null,null,null,DB.sh[t]));
+add('hn','all',null,null,null,DB.hn);return m}
+const sig=d=>d.kind=='offer'?'1':JSON.stringify(d.data);
+function mkSnap(){SNAP=new Map();docsOf().forEach((d,k)=>SNAP.set(k,sig(d)))}
+function save(){flush()}
+async function flush(){const cur=docsOf(),up=[],del={};
+cur.forEach((d,k)=>{const x=sig(d),had=SNAP.has(k);if(SNAP.get(k)!==x){up.push({d,had});SNAP.set(k,x)}});
+[...SNAP.keys()].forEach(k=>{if(!cur.has(k)){const i=k.indexOf(':'),kind=k.slice(0,i);(del[kind]=del[kind]||[]).push(k.slice(i+1));SNAP.delete(k)}});
+const out=OUTQ.splice(0);if(!up.length&&!out.length&&!Object.keys(del).length)return;
+PEND++;
+try{
+for(const kind of Object.keys(del)){const {error}=await sb.from('docs').delete().eq('kind',kind).in('id',del[kind]);if(error)throw error}
+for(const {d,had} of up){
+if(had){const r=await sb.from('docs').update({data:d.data}).eq('kind',d.kind).eq('id',d.id).select('id');if(r.error)throw r.error;if(r.data&&r.data.length)continue}
+const {error}=await sb.from('docs').insert(d);if(error)throw error}
+if(out.length){const {error}=await sb.from('notif').insert(out);if(error)throw error}
+}catch(e){console.error(e);toast('Uložení se nepodařilo, načítám znovu')}
+finally{PEND--;if(!PEND)schedPull(0)}}
+function wr(p){PEND++;Promise.resolve(p).then(r=>{if(r&&r.error)throw r.error}).catch(e=>{console.error(e);toast('Změnu se nepodařilo uložit')}).finally(()=>{PEND--;if(!PEND)schedPull(0)})}
+function schedPull(ms){clearTimeout(PT);PT=setTimeout(()=>pull(),ms==null?400:ms)}
+async function pull(silent){if(!UID)return;if(PEND)return schedPull();
+const q=t=>sb.from(t).select('*').order('created_at',{ascending:true});
+let p,d,n,qr;
+try{[p,d,n,qr]=await Promise.all([sb.from('profiles').select('*'),q('docs'),sb.from('notif').select('*').order('created_at',{ascending:false}).limit(50),sb.from('qr').select('*')])}catch(e){return}
+if(p.error||d.error||n.error||qr.error){if(!silent)toast('Nepodařilo se načíst data');return}
+if(PEND)return schedPull();
+const me=p.data.find(x=>x.id==UID),N={u:{},qr:{},reqs:[],notif:{},offers:[],cancel:[],types:[],cfg:null,sh:{},hn:null};
+p.data.forEach(x=>N.u[x.username]={id:x.id,name:x.name,role:x.role,team:x.team,pos:x.pos||undefined,allow:x.allow==null?undefined:x.allow});
+d.data.forEach(x=>{const o=x.data;({req:()=>N.reqs.push(o),offer:()=>N.offers.push(o),cancel:()=>N.cancel.push(o),type:()=>N.types.push(o),cfg:()=>{N.cfg=o},sh:()=>{N.sh[x.id]=o},hn:()=>{N.hn=o}}[x.kind]||(()=>0))()});
+if(!N.types.length)N.types=TYPES0.map(t=>({...t}));
+N.cfg=Object.assign({ot:20,rest:8,max:16},N.cfg||{});
+TEAMS.forEach(t=>{if(!N.sh[t]&&SH0[t])N.sh[t]=JSON.parse(JSON.stringify(SH0[t]))});
+N.hn=N.hn||JSON.parse(JSON.stringify(HN0));
+const mu=me?me.username:null;
+qr.data.forEach(x=>N.qr[x.code]={team:x.team,leader:mu,used:x.used,pos:x.pos,by:x.by_name});
+N.notif[mu]=n.data.map(x=>({id:x.id,t:x.title,m:x.msg||'',r:x.read?1:0}));
+const before=ME?unread():0;
+DB=N;SH=DB.sh;HN=DB.hn;rng();mkSnap();ME=mu;
+if(!ME)return;
+const L=(DB.notif[ME]||[]).filter(x=>!x.r);
+if(!silent&&ME&&L.length>before){beep();toast(L[0].t)}
+const typing=/INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName||'');
+if(!$('dlg').innerHTML&&!typing)render();else needR=true}
+function listen(){if(CH)sb.removeChannel(CH);CH=sb.channel('rb-live');['docs','notif','profiles'].forEach(t=>CH.on('postgres_changes',{event:'*',schema:'public',table:t},()=>schedPull()));CH.subscribe()}
+
+let MINI=0,MAXI=0;
+function rng(){let a=1e9,b=0;Object.values(SH).forEach(x=>Object.keys(x).forEach(k=>{const [y,m]=k.split('-').map(Number),i=y*12+m-1;a=Math.min(a,i);b=Math.max(b,i)}));if(!b){a=b=NOW.getFullYear()*12+NOW.getMonth()}MINI=a;MAXI=b}
+function clampSt(){const i=Math.min(MAXI,Math.max(MINI,st.y*12+st.m));st.y=Math.floor(i/12);st.m=i%12}
+rng();
+const st={ed:null,tab:'sm',view:'m',y:NOW.getFullYear(),m:NOW.getMonth(),sel:new Set(),pv:'nab',lm:'in',adm:null,cd:false};
+{const i=Math.min(MAXI,Math.max(MINI,st.y*12+st.m));st.y=Math.floor(i/12);st.m=i%12}
+const U=()=>DB.u[ME];
+const leadersOf=t=>Object.keys(DB.u).filter(k=>DB.u[k].role=='leader'&&DB.u[k].team==t);
+const empsOf=t=>Object.keys(DB.u).filter(k=>DB.u[k].role=='emp'&&DB.u[k].team==t);
+function notify(k,t,m){const u=DB.u[k];if(!u||!u.id)return;OUTQ.push({user_id:u.id,title:String(t).slice(0,120),msg:String(m||'').slice(0,300)})}
+const unread=()=>(DB.notif[ME]||[]).filter(n=>!n.r).length;
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),2600)}
+// ---------- icons / tabs
+const IC={sm:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',pres:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',nem:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',prof:'<circle cx="12" cy="8" r="4"/><path d="M4 20c1-4 4-6 8-6s7 2 8 6"/>',zad:'<path d="M5 12l4 4 10-10"/><rect x="3" y="3" width="18" height="18" rx="2"/>',pre:'<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',roz:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>',lim:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',ved:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 19c1-4 3-5 6-5s5 1 6 5M15 15c3 0 5 1 6 4"/>'};
+const TB={emp:[['sm','Směny'],['pres','Přesčasy'],['nem','Nemoc'],['prof','Profil']],leader:[['sm','Směny'],['pres','Přesčasy'],['zad','Žádosti'],['prof','Profil']],admin:[['ved','Uživatelé'],['lim','Limity'],['pre','Předvolby'],['roz','Rozpis'],['prof','Profil']]};
+const RL={emp:'zaměstnanec',leader:'vedoucí',admin:'superadmin'};
+function TT(u){return {sm:u.role=='emp'?['Moje směny','Označte dny a pošlete žádost o dovolenou']:['Rozpis týmu '+u.team,'Směny týmu a svátky'],pres:['Přesčasy',u.role=='emp'?'Nabídky a moje přesčasy':'Nabídky pro tým '+u.team],nem:['Nemoc, OČR a lékař','Nahlášení nepřítomnosti'],zad:['Žádosti a hlášení','Schvalování dovolené'],ved:['Uživatelé','Správa vedoucích a zaměstnanců'],lim:['Limity','Pravidla pro přesčasy'],roz:['Rozpis směn','Export a načtení rozpisu'],pre:['Předvolby','Typy nepřítomnosti pro zaměstnance'],prof:['Profil',u.name]}}
+function nav(){const u=U(),b=unread();$('nav').innerHTML=TB[u.role].map(t=>{const bd=b&&((u.role=='emp'&&t[0]=='sm')||(u.role=='leader'&&t[0]=='zad'))?`<i class="bdg">${b}</i>`:'';return `<button role="tab" aria-selected="${t[0]==st.tab}" onclick="go('${t[0]}')"><span style="position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[t[0]]}</svg>${bd}</span>${t[1]}</button>`}).join('')}
+function go(t){st.tab=t;st.ed=null;st.sel.clear();render()}
+// ---------- login
+function login(){const R=st.lm=='reg';
+return `<div class="card"><div class="chips" style="margin-bottom:12px">${[['in','Přihlášení'],['reg','Registrace přes QR']].map(c=>`<button class="chip" aria-pressed="${c[0]==st.lm}" onclick="st.lm='${c[0]}';render()">${c[1]}</button>`).join('')}</div>
+<div class="fld"><label>Jméno${R?' a příjmení':''}<input id="ln" autocomplete="username" placeholder="${R?'Jan Novák':'Přihlašovací jméno'}"></label><label>Heslo<input id="lp" type="password" autocomplete="${R?'new-password':'current-password'}"></label>${R?'<label>Kód z QR od vedoucího<input id="lq" placeholder="např. K7M2XQ9A" style="text-transform:uppercase"></label>':''}</div>
+<button class="btn" style="width:100%;margin-top:14px" onclick="${R?'doReg()':'doLogin()'}">${R?'Vytvořit profil':'Přihlásit se'}</button>
+<div class="meta" style="margin:12px 0 0">${R?'Kód vygeneruje vedoucí ve svém profilu. Platí jen jednou a přiřadí vás do jeho týmu.':''}</div></div>`}
+function enter(k){ME=k;st.tab=TB[DB.u[k].role][0][0];st.sel.clear();render();if(unread())beep();pushInit()}
+async function doLogin(){const n=$('ln').value.trim(),p=$('lp').value;if(!n||!p)return toast('Vyplňte jméno a heslo');
+const {data,error}=await sb.auth.signInWithPassword({email:emailOf(norm(n)),password:p});
+if(error||!data.session)return toast('Nesprávné jméno nebo heslo');
+UID=data.session.user.id;await pull(true);
+if(!ME){await sb.auth.signOut();UID=null;return toast('Účet nemá vytvořený profil')}
+listen();enter(ME)}
+async function doReg(){const n=$('ln').value.trim().replace(/\s+/g,' '),p=$('lp').value,q=$('lq').value.trim().toUpperCase();
+if(!NAMEOK.test(n))return toast('Jméno: 2–30 znaků, písmena a mezery');
+if(p.length<8)return toast('Heslo musí mít alespoň 8 znaků');
+if(!/^[A-Z0-9]{8}$/.test(q))return toast('Neplatný QR kód');
+let j={};try{const r=await fetch(CFG.url+'/functions/v1/register',{method:'POST',headers:{'Content-Type':'application/json',apikey:CFG.key,Authorization:'Bearer '+CFG.key},body:JSON.stringify({name:n,password:p,code:q})});j=await r.json().catch(()=>({}));if(!r.ok)return toast(j.error||'Registrace se nezdařila')}catch(e){return toast('Registrace se nezdařila, zkontrolujte připojení')}
+const {data,error}=await sb.auth.signInWithPassword({email:emailOf(norm(n)),password:p});
+if(error||!data.session)return toast('Účet vytvořen, přihlaste se');
+UID=data.session.user.id;await pull(true);listen();if(ME)enter(ME)}
+async function logout(){try{await pushOff()}catch(e){}
+try{if(CH)sb.removeChannel(CH)}catch(e){}CH=null;
+try{await sb.auth.signOut()}catch(e){}
+UID=null;ME=null;OUTQ=[];DB={u:{},qr:{},reqs:[],notif:{},offers:[],cancel:[],types:TYPES0.map(t=>({...t})),cfg:{ot:20,rest:8,max:16},sh:SH0,hn:HN0};SH=DB.sh;HN=DB.hn;st.lm='in';render()}
+// ---------- calendar
+const evMap=()=>{const e={};DB.reqs.filter(r=>r.user==ME&&r.id!=st.ed).forEach(r=>r.days.forEach(k=>{if(r.type=='dov'){if(r.st=='ok')e[k]='dov';else if(r.st=='pend')e[k]='dovp'}else if(typeOf(r.type).dot)e[k]=r.type}));return e};
+const used=k=>DB.reqs.filter(r=>r.user==k&&r.type=='dov'&&r.st!='no').reduce((x,r)=>x+r.days.length,0),balOf=k=>(DB.u[k].allow??25)-used(k),bal=()=>balOf(ME);
+function leg(){return `<div class="leg"><span><i class="sw" style="background:#CFEBCB"></i>R ranní</span><span><i class="sw" style="background:#FFD8A8"></i>O odpolední</span><span><i class="sw" style="background:#007BC0"></i>N noční</span><span><i class="sw" style="border:2px solid #ED0007"></i>svátek</span><span><i class="sw" style="background:#62C255;border-color:#1B2733"></i>dnes</span><span><i class="sw" style="border:2px dashed #C8000A;background:#F6D5D7"></i>zrušená směna</span></div>
+<div class="leg" style="margin-top:6px"><span><i class="ld" style="background:#00884A"></i>dovolená schválená</span><span><i class="ld" style="border:2px solid #00884A"></i>čeká na schválení</span>${DB.types.filter(t=>t.dot).map(t=>`<span><i class="ld" style="background:${t.color}"></i>${t.name}</span>`).join('')}</div>`}
+function mo(t,ev,pk){const {y,m}=st,first=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+let c='';for(const d of 'PÚSČPSN')c+=`<div class="h">${d}</div>`;for(let i=0;i<first;i++)c+='<div></div>';
+for(let d=1;d<=days;d++){const k=key(y,m,d),s=shiftOf(t,y,m,d),h=HN[k],e=ev[k],sel=st.sel.has(k),cx=isCanc(t,k);
+c+=`<button class="day ${s||'free'}${h?' hol':''}${sel?' sel':''}${k==TD?' today':''}${cx?' canc':''}" ${pk?`aria-pressed="${sel}" onclick="pick('${k}')"`:'tabindex="-1"'} aria-label="${d}. ${MN[m].toLowerCase()}${s?', '+SN[s]+' směna':', volno'}${cx?', směna zrušena':''}${h?', svátek '+h:''}${k==TD?', dnes':''}">${d}<small>${cx?'✕':s||'&nbsp;'}</small>${e?dotH(e):''}</button>`}
+return `<div class="cal">${c}</div>`}
+function yr(t,ev){const y=st.y;let o='';
+for(let m=0;m<12;m++){const first=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate();let c='';for(const d of 'PÚSČPSN')c+=`<div class="h">${d}</div>`;for(let i=0;i<first;i++)c+='<div></div>';
+for(let d=1;d<=days;d++){const k=key(y,m,d),s=shiftOf(t,y,m,d),e=ev[k];c+=`<div class="mc ${s||'free'}${HN[k]?' hol':''}${k==TD?' today':''}${isCanc(t,k)?' canc':''}">${d}${e?dotH(e):''}</div>`}
+o+=`<div class="card"><button class="mh" onclick="st.m=${m};st.view='m';render()" aria-label="Otevřít ${MN[m].toLowerCase()}">${MN[m]}</button><div class="cal">${c}</div></div>`}
+return `<div class="mg">${o}</div>`}
+function notifCard(){const L=(DB.notif[ME]||[]).slice(0,6);if(!L.length)return '';
+return `<div class="card"><div class="row"><b>Oznámení</b><div style="display:flex;gap:6px"><button class="btn sec" onclick="clearN()">Smazat vše</button></div></div>${L.map(n=>`<div class="row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><div><div style="font-size:14px;font-weight:${n.r?400:700}">${n.r?'':'<i class="ld" style="background:#007BC0;margin-right:6px"></i>'}${esc(n.t)}</div><div class="lbl" style="font-size:13px">${esc(n.m)}</div></div><button class="mn" aria-label="Smazat oznámení" onclick="delN('${n.id}')">✕</button></div>`).join('')}</div>`}
+function delN(id){DB.notif[ME]=(DB.notif[ME]||[]).filter(n=>n.id!=id);wr(sb.from('notif').delete().eq('id',id));render()}
+function clearN(){DB.notif[ME]=[];wr(sb.from('notif').delete().eq('user_id',UID));render()}
+function readAll(){(DB.notif[ME]||[]).forEach(n=>n.r=1);wr(sb.from('notif').update({read:true}).eq('user_id',UID).eq('read',false));render()}
+function sm(){const u=U(),emp=u.role=='emp',Y=st.view=='y',ev=emp?evMap():{},n=st.sel.size;
+return pushCard()+(emp?notifCard()+editBanner()+cancCard()+`<div class="card row"><div><div class="lbl">Zbývá dovolené</div><div class="big">${bal()} dnů</div></div><div class="meta" style="text-align:right;margin:0">Vybráno směn: ${n}</div></div>`:cancCard())+
+`<div class="chips">${[['m','Měsíc'],['y','Celý rok']].map(v=>`<button class="chip" aria-pressed="${v[0]==st.view}" onclick="st.view='${v[0]}';render()">${v[1]}</button>`).join('')}</div>
+<div class="card"><div class="row" style="margin-bottom:10px"><button class="mn" aria-label="Předchozí" onclick="mon(-1)">‹</button><b style="font-size:16px">${Y?st.y:MN[st.m]+' '+st.y}</b><button class="mn" aria-label="Další" onclick="mon(1)">›</button></div>${Y?'<div class="meta" style="margin:0 0 8px">Klepnutím na měsíc ho otevřete.</div>':''}${Y?yr(u.team,ev):mo(u.team,ev,emp)}${leg()}</div>`+
+(emp?(st.ed?`<div class="row"><button class="btn sec" style="flex:1" onclick="cancelEdit()">Zrušit úpravy</button><button class="btn" style="flex:1" ${n?'':'disabled style="color:#4A5560;border-color:#8A949E"'} onclick="sendVac()">${n?`Uložit změny (${n})`:'Vyberte dny'}</button></div>`:`<button class="btn" ${n?'':'disabled style="color:#4A5560;border-color:#8A949E"'} onclick="sendVac()">${n?`Poslat žádost o dovolenou (${n})`:'Označte dny v měsíčním zobrazení'}</button>`)+myVac():'')}
+const isCanc=(tm,k)=>DB.cancel.some(c=>c.team==tm&&c.date==k);
+function cancCard(){const u=U(),lead=u.role=='leader',L=DB.cancel.filter(c=>c.team==u.team&&c.date>=TD).sort((a,b)=>a.date<b.date?-1:1);
+if(!L.length&&!lead)return '';
+return `<div class="card"><div class="row"><b>Zrušené směny</b>${lead?'<button class="btn" onclick="openCanc()">Zrušit směnu</button>':''}</div>`+(L.map(c=>{const [y,m,d]=c.date.split('-').map(Number),s=shiftOf(c.team,y,m-1,d);return `<div class="row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><div><b style="font-size:14px;color:#C8000A">${dl(c.date)} · ${s?SN[s]+' směna':'směna'} zrušena</b>${c.note?`<div class="lbl" style="font-size:13px">${esc(c.note)}</div>`:''}</div>${lead?`<div style="display:flex;gap:6px"><button class="btn sec" onclick="openCanc('${c.id}')">Upravit</button><button class="btn sec" onclick="delCanc('${c.id}')">${st.cdC==c.id?'Opravdu?':'Obnovit'}</button></div>`:''}</div>`}).join('')||'<div class="meta" style="margin:8px 0 0">Žádná zrušená směna.</div>')+'</div>'}
+function openCanc(id){const c=id?DB.cancel.find(x=>x.id==id):{date:TD,note:''};if(!c)return;sheet(`<b style="font-size:18px">${id?'Upravit zrušenou směnu':'Zrušit směnu'}</b><div class="fld"><label>Datum<input type="date" id="cd" value="${c.date}" min="${TD}"${id?' disabled':''}></label><label>Poznámka (nepovinné)<input id="cn" maxlength="100" value="${esc(c.note)}" placeholder="např. jedna linka ze 4 pojede"></label></div><div class="meta" style="margin:0">Zobrazí se jen zaměstnancům týmu ${U().team}, kteří se přihlásili přes QR kód vedoucího.</div>${btns(`saveCanc('${id||''}')`,'Uložit')}`,'#ED0007')}
+function cancNotify(tm,title,msg){empsOf(tm).forEach(k=>notify(k,title,msg))}
+function saveCanc(id){const u=U(),n=$('cn').value.trim().slice(0,100);
+if(id){const c=DB.cancel.find(x=>x.id==id);if(!c||c.team!=u.team)return;c.note=n;cancNotify(u.team,'Zrušená směna upravena – '+dl(c.date),n||'Směna je zrušená')}
+else{const d=$('cd').value;if(!d)return toast('Vyberte datum');if(d<TD)return toast('Datum nesmí být v minulosti');const [y,m,dd]=d.split('-').map(Number),s=shiftOf(u.team,y,m-1,dd);
+if(!s)return toast('V tento den tým nemá žádnou směnu');if(isCanc(u.team,d))return toast('Tato směna už je zrušená – upravte ji v seznamu');
+DB.cancel.push({id:uid(),team:u.team,date:d,note:n,by:ME});cancNotify(u.team,'Zrušená směna – '+dl(d),SN[s]+' směna'+(n?' · '+n:''))}
+save();closeDlg();render();toast(id?'Poznámka uložena':'Směna zrušena, tým upozorněn')}
+function delCanc(id){const c=DB.cancel.find(x=>x.id==id);if(!c||c.team!=U().team)return;if(st.cdC!=id){st.cdC=id;render();return}
+DB.cancel=DB.cancel.filter(x=>x.id!=id);st.cdC=null;cancNotify(c.team,'Směna obnovena – '+dl(c.date),'Zrušení směny bylo odvoláno');save();render();toast('Směna obnovena, tým upozorněn')}
+function pick(k){const ev=evMap(),[y,m,d]=k.split('-').map(Number);if(st.sel.has(k))st.sel.delete(k);else if(isCanc(U().team,k))toast('Směna je zrušená – dovolená není potřeba');else if(shiftOf(U().team,y,m-1,d)&&!HN[k]&&!ev[k])st.sel.add(k);else toast('V tento den nelze žádat o dovolenou');render()}
+function mon(d){if(st.view=='y'){st.y=Math.min(Math.floor(MAXI/12),Math.max(Math.floor(MINI/12),st.y+d));render();return}const i=Math.min(MAXI,Math.max(MINI,st.y*12+st.m+d));st.y=Math.floor(i/12);st.m=i%12;render()}
+const editBanner=()=>st.ed?`<div class="card" style="border-left:4px solid #007BC0"><b>Úprava žádosti o dovolenou</b><div class="meta" style="margin:3px 0 0">Klepnutím na dny je přidáte nebo odeberete, potom uložte změny.</div></div>`:'';
+function myVac(){const R=DB.reqs.filter(r=>r.user==ME&&r.type=='dov').reverse().slice(0,8);if(!R.length)return '';
+return '<h2>Moje žádosti o dovolenou</h2>'+R.map(r=>{const fut=r.days[r.days.length-1]>=TD,cn=st.cdV==r.id;return `<div class="card"><div class="row"><div><b style="font-size:15px">${dtxt(r.days)}</b><div class="lbl" style="font-size:13px">${r.days.length} ${r.days.length==1?'den':r.days.length<5?'dny':'dní'}</div></div><span class="tag ${ST_T[r.st][1]}">${ST_T[r.st][0]}</span></div>${r.st=='pend'?`<div class="row" style="margin-top:10px"><button class="btn sec" style="flex:1" onclick="cancelVac('${r.id}')">${cn?'Opravdu zrušit?':'Zrušit žádost'}</button><button class="btn" style="flex:1" onclick="editVac('${r.id}')">${st.ed==r.id?'Upravuji…':'Upravit'}</button></div>`:r.st=='ok'&&fut?`<button class="btn sec" style="width:100%;margin-top:10px" onclick="cancelVac('${r.id}')">${cn?'Opravdu zrušit dovolenou?':'Zrušit dovolenou'}</button>`:''}</div>`}).join('')}
+function editVac(id){const r=DB.reqs.find(x=>x.id==id);if(!r||r.user!=ME||r.st!='pend')return;st.ed=id;st.cdV=null;st.sel=new Set(r.days);st.view='m';const p=r.days[0].split('-').map(Number);st.y=p[0];st.m=p[1]-1;render();$('m').scrollTop=0;toast('Upravte dny a uložte změny')}
+function cancelEdit(){st.ed=null;st.sel.clear();render()}
+function cancelVac(id){const r=DB.reqs.find(x=>x.id==id);if(!r||r.user!=ME)return;if(st.cdV!=id){st.cdV=id;render();return}
+DB.reqs=DB.reqs.filter(x=>x.id!=id);leadersOf(r.team).forEach(l=>notify(l,(r.st=='ok'?'Dovolená zrušena – ':'Žádost o dovolenou zrušena – ')+r.name,dtxt(r.days)));if(st.ed==id){st.ed=null;st.sel.clear()}st.cdV=null;save();render();toast('Zrušeno')}
+function sendVac(){const n=st.sel.size,u=U(),r=st.ed&&DB.reqs.find(x=>x.id==st.ed);if(!n)return;
+if(st.ed&&(!r||r.st!='pend')){st.ed=null;st.sel.clear();render();return toast('Žádost už byla vyřízena nebo zrušena')}
+if(n>bal()+(r?r.days.length:0))return toast('Nemáte dostatek dnů dovolené');const days=[...st.sel].sort();
+if(r){r.days=days;leadersOf(u.team).forEach(l=>notify(l,'Žádost o dovolenou upravena – '+u.name,dtxt(days)));st.ed=null}
+else{DB.reqs.push({id:uid(),user:ME,name:u.name,team:u.team,type:'dov',days,st:'pend'});leadersOf(u.team).forEach(l=>notify(l,'Žádost o dovolenou – '+u.name,dtxt(days)))}
+st.sel.clear();save();render();toast(r?'Žádost upravena':'Žádost odeslána vedoucímu')}
+// ---------- dialogs
+function sheet(h,c){$('dlg').innerHTML=`<div class="ov" onclick="if(event.target==this)closeDlg()"><div class="sheet" role="dialog" aria-modal="true" style="--c:${c}">${h}</div></div>`;const f=$('dlg').querySelector('input,select');if(f)f.focus()}
+function closeDlg(){$('dlg').innerHTML=''}
+document.addEventListener('keydown',e=>{if(e.key=='Escape')closeDlg()});
+const btns=(ok,l)=>`<div class="row"><button class="btn sec" style="flex:1" onclick="closeDlg()">Zrušit</button><button class="btn" style="flex:1" onclick="${ok}">${l}</button></div>`;
+// nemoc
+function nem(){const R=DB.reqs.filter(r=>r.user==ME&&r.type!='dov').reverse();
+return DB.types.map(t=>`<button class="act" style="--c:${t.color}" onclick="openNem('${t.id}')"><b>${t.name}</b><span>${t.desc||''}</span></button>`).join('')+'<h2>Moje záznamy</h2>'+(R.map(r=>`<div class="card row"><div><b style="font-size:15px">${typeOf(r.type).name}</b><div class="lbl" style="font-size:13px">${dtxt(r.days)}</div></div><span class="tag warn">Odesláno</span></div>`).join('')||'<div class="card meta" style="margin:0">Zatím žádné záznamy.</div>')}
+function openNem(id){const t=typeOf(id);sheet(`<b style="font-size:18px">${t.name}</b><div class="g2"><label>Od<input type="date" id="df" value="${TD}"></label><label>Do<input type="date" id="dto" value="${TD}"></label></div>${btns(`saveNem('${id}')`,'Odeslat')}`,t.color)}
+function saveNem(id){const f=$('df').value,t=$('dto').value;if(!f||!t||t<f)return toast('Datum „Do“ musí být stejné nebo pozdější než „Od“');
+const A=f.split('-').map(Number),B=t.split('-').map(Number),days=[];for(let d=new Date(A[0],A[1]-1,A[2],12);d<=new Date(B[0],B[1]-1,B[2],12);d.setDate(d.getDate()+1))days.push(key(d.getFullYear(),d.getMonth(),d.getDate()));
+const u=U();DB.reqs.push({id:uid(),user:ME,name:u.name,team:u.team,type:id,days,st:'ok'});leadersOf(u.team).forEach(l=>notify(l,typeOf(id).name+' – '+u.name,dtxt(days)));save();closeDlg();render();toast('Odesláno vedoucímu')}
+function pre(){return `<button class="btn" onclick="openType()">Nová předvolba</button>`+DB.types.map(t=>`<div class="card"><div style="display:flex;align-items:center;gap:10px"><i class="ld" style="background:${t.color};width:16px;height:16px;flex:none"></i><div><b style="font-size:15px">${t.name}</b><div class="lbl" style="font-size:13px">${t.desc||'bez popisu'} · ${t.dot?'tečka v kalendáři':'bez tečky'}</div></div></div><div class="row" style="margin-top:10px"><button class="btn sec" style="flex:1" onclick="openType('${t.id}')">Upravit</button><button class="btn sec" style="flex:1" onclick="delType('${t.id}')">${st.cdT==t.id?'Opravdu smazat?':'Smazat'}</button></div></div>`).join('')}
+function openType(id){const t=id?typeOf(id):{name:'',desc:'',color:'#18837E',dot:true};sheet(`<b style="font-size:18px">${id?'Upravit předvolbu':'Nová předvolba'}</b><div class="fld"><label>Název<input id="tn" value="${t.name}"></label><label>Popis<input id="td" value="${t.desc||''}"></label><label>Barva<input type="color" id="tc" value="${t.color}"></label><label>Tečka v kalendáři<select id="tdt"><option value="1"${t.dot?' selected':''}>Ano</option><option value="0"${t.dot?'':' selected'}>Ne</option></select></label></div>${btns(`saveType('${id||''}')`,'Uložit')}`,t.color)}
+function saveType(id){const n=$('tn').value.trim(),d=$('td').value.trim(),c=$('tc').value;if(!/^[^<>&"'`\\]{2,40}$/.test(n))return toast('Název: 2–40 znaků bez speciálních znaků');if(!/^[^<>&"'`\\]{0,60}$/.test(d))return toast('Popis: max. 60 znaků bez speciálních znaků');
+const o={id:id||uid(),name:n,desc:d,color:c,dot:$('tdt').value=='1'};if(id)DB.types=DB.types.map(t=>t.id==id?o:t);else DB.types.push(o);save();closeDlg();render();toast('Předvolba uložena')}
+function delType(id){if(st.cdT!=id){st.cdT=id;render();return}DB.types=DB.types.filter(t=>t.id!=id);st.cdT=null;save();render();toast('Předvolba smazána')}
+// přesčasy
+const OF=id=>DB.offers.find(o=>o.id==id);
+const dkey=x=>{const d=new Date(x*60000);return key(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())};
+const oEnd=o=>o.date2||(tmin(o.s1)>tmin(o.s0)?o.date:dkey(dayAbs(o.date)+1440));
+const oSA=o=>dayAbs(o.date)+tmin(o.s0),oEA=o=>dayAbs(oEnd(o))+tmin(o.s1),olen=o=>oEA(o)-oSA(o);
+const otxt=o=>{const e=oEnd(o);return e==o.date?o.s0+'–'+o.s1:o.s0+' – '+dl(e)+' '+o.s1};
+const vt=v=>v.ad&&v.ad!=v.bd?sh(v.ad)+' '+v.a+' – '+sh(v.bd)+' '+v.b:v.a+'–'+v.b;
+const mk=ok=>ok?'<b class="ok">✓</b>':'<b class="bad">✕</b>';
+function ovCalc(o,a,b){if(!a||!b)return null;const s=dayAbs(a.slice(0,10))+tmin(a.slice(11,16)),e=dayAbs(b.slice(0,10))+tmin(b.slice(11,16));return s>=oSA(o)&&e<=oEA(o)&&e>s?e-s:null}
+function openOv(id){const o=OF(id),S=o.date+'T'+o.s0,E=oEnd(o)+'T'+o.s1;sheet(`<div><b style="font-size:18px">Přihlásit se na přesčas</b><div class="meta" style="margin:4px 0 0">${dl(o.date)} · ${otxt(o)}</div></div><div class="fld"><label>Přijdu od<input type="datetime-local" id="oa" value="${S}" min="${S}" max="${E}" oninput="ovSum('${id}')"></label><label>Odejdu do<input type="datetime-local" id="ob" value="${E}" min="${S}" max="${E}" oninput="ovSum('${id}')"></label></div><div id="ovs" role="status" style="font-size:14px;font-weight:700"></div><button class="btn sec" onclick="$('oa').value='${S}';$('ob').value='${E}';ovSum('${id}')">Celý přesčas</button>${btns(`saveOv('${id}')`,'Odeslat')}`,'#007BC0');ovSum(id)}
+function ovSum(id){const o=OF(id),r=ovCalc(o,$('oa').value,$('ob').value);$('ovs').textContent=r?`Přijdu na ${fm(r)}`:`Čas musí být v rámci ${dl(o.date)} ${otxt(o)}`;$('ovs').style.color=r?'#1B2733':'#C8000A'}
+function saveOv(id){const o=OF(id);if(o.team==U().team)return toast('Přesčas vašeho vedoucího se nabízí jiným týmům');if(full(o,U().pos||'Operátor'))return toast('Místa pro vaši pozici jsou už obsazená');const a=$('oa').value,b=$('ob').value,r=ovCalc(o,a,b);if(!r)return toast('Zkontrolujte čas – musí být v rámci nabídky');o.apps[ME]={a:a.slice(11,16),b:b.slice(11,16),ad:a.slice(0,10),bd:b.slice(0,10),min:r,st:'pend'};wr(sb.rpc('offer_apply',{oid:id,app:o.apps[ME]}));leadersOf(o.team).forEach(l=>notify(l,'Přihláška na přesčas – '+U().name,dl(o.date)+' · '+vt(o.apps[ME])));save();closeDlg();render();toast('Přihláška odeslána')}
+function unsign(id){delete OF(id).apps[ME];wr(sb.rpc('offer_unapply',{oid:id}));render();toast('Přihláška zrušena')}
+const ST_T={pend:['Čeká na schválení','warn'],ok:['Schváleno','ok'],no:['Zamítnuto','bad']};
+function pres(){const u=U();return u.role=='emp'?presE(u):presL(u)}
+function presE(u){const pos=u.pos||'Operátor',mine=DB.offers.filter(o=>o.apps[ME]||(o.team!=u.team&&(!o.need||o.need[pos]>0))),done=mine.filter(o=>o.apps[ME]&&o.apps[ME].st=='ok'&&o.date<TD),mm=TD.slice(0,7);
+const tot=done.filter(o=>o.date.slice(0,7)==mm).reduce((x,o)=>x+o.apps[ME].min,0),pend=mine.filter(o=>o.apps[ME]&&o.apps[ME].st=='pend').reduce((x,o)=>x+o.apps[ME].min,0);
+const top=`<div class="card"><div class="lbl">Přesčasy v tomto měsíci</div><div><span class="big">${fm(tot)}</span> <span class="lbl">z limitu ${DB.cfg.ot} h${pend?' · čeká '+fm(pend):''}</span></div><div class="bar"><i style="width:${DB.cfg.ot?Math.min(100,tot/(DB.cfg.ot*.6)):100}%"></i></div></div>
+<div class="chips">${[['nab','Nabídky'],['moje','Moje přesčasy']].map(c=>`<button class="chip" aria-pressed="${c[0]==st.pv}" onclick="st.pv='${c[0]}';render()">${c[1]}</button>`).join('')}</div>`;
+const up=mine.filter(o=>o.date>=TD).sort((a,b)=>a.date<b.date?-1:1);
+if(st.pv=='nab')return top+(up.map(o=>{const v=o.apps[ME];return `<div class="card"><div class="row"><b style="font-size:16px">${dl(o.date)}</b></div><div class="meta">${otxt(o)} · ${fm(olen(o))} · tým ${o.team}${o.need?'<br>Potřeba: '+needTxt(o)+(o.need[pos]>0?' · pro vaši pozici zbývá '+Math.max(0,o.need[pos]-fillOf(o,pos))+' z '+o.need[pos]:''):''}</div>${v?`<div class="row"><div><div class="tag ${ST_T[v.st][1]}">${ST_T[v.st][0]}</div><div class="meta" style="margin:2px 0 0">Přijdu ${vt(v)} (${fm(v.min)})</div></div>${v.st=='pend'?`<button class="btn sec" onclick="unsign('${o.id}')">Zrušit</button>`:''}</div>`:full(o,pos)?'<div class="tag mut">Obsazeno</div>':`<button class="btn" onclick="openOv('${o.id}')">Přihlásit se</button>`}</div>`}).join('')||'<div class="card meta" style="margin:0">Ostatní vedoucí zatím nenabídli žádný přesčas.</div>');
+const my=up.filter(o=>o.apps[ME]);
+return top+(my.length?'<h2>Přihlášeno</h2>'+my.map(o=>{const v=o.apps[ME];return `<div class="card row"><div><b style="font-size:15px">${dl(o.date)}</b><div class="lbl" style="font-size:13px">${vt(v)} · ${fm(v.min)}</div></div><span class="tag ${ST_T[v.st][1]}">${ST_T[v.st][0]}</span></div>`}).join(''):'')+'<h2>Odpracováno</h2>'+(done.map(o=>`<div class="card row"><div><b style="font-size:15px">${dl(o.date)}</b><div class="lbl" style="font-size:13px">${vt(o.apps[ME])} · ${fm(o.apps[ME].min)}</div></div><span class="tag ok">Odpracováno</span></div>`).join('')||'<div class="card meta" style="margin:0">Zatím nic odpracováno.</div>')}
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const posOf=k=>(DB.u[k]&&DB.u[k].pos)||'Operátor';
+const fillOf=(o,p)=>Object.entries(o.apps).filter(([k,v])=>v.st=='ok'&&posOf(k)==p).length;
+const needTxt=o=>o.need?Object.entries(o.need).filter(e=>e[1]>0).map(([p,n])=>n+'× '+p).join(', '):'';
+const full=(o,p)=>!!(o.need&&o.need[p]>0&&fillOf(o,p)>=o.need[p]);
+const SHT={R:[360,840],O:[840,1320],N:[1320,1800]};
+const dayAbs=k=>{const [y,m,d]=k.split('-').map(Number);return Date.UTC(y,m-1,d)/60000};
+const aStr=x=>{const d=new Date(x*60000);return dl(key(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()))+' '+pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())};
+const ovStart=(o,v)=>v.ad?dayAbs(v.ad)+tmin(v.a):dayAbs(o.date)+tmin(o.s0)+(tmin(v.a)-tmin(o.s0)+1440)%1440;
+function ovCheck(o,k){const u=DB.u[k],v=o.apps[k],s=ovStart(o,v),e=s+v.min,R=Math.round(DB.cfg.rest*60),ab=new Set(),B=[];
+DB.reqs.filter(r=>r.user==k&&(r.type!='dov'||r.st=='ok')).forEach(r=>r.days.forEach(d=>ab.add(d)));
+for(let i=-7;i<=7;i++){const D=new Date(dayAbs(o.date)*60000+i*864e5),Y=D.getUTCFullYear(),M=D.getUTCMonth(),dd=D.getUTCDate(),kk=key(Y,M,dd),c=shiftOf(u.team,Y,M,dd);if(c&&!ab.has(kk)&&!isCanc(u.team,kk)){const b=dayAbs(kk);B.push([b+SHT[c][0],b+SHT[c][1],'směna'])}}
+DB.offers.forEach(x=>{const w=x.apps[k];if(x.id!=o.id&&w&&w.st=='ok'){const a=ovStart(x,w);B.push([a,a+w.min,'přesčas'])}});
+const ov=B.filter(b=>b[0]<e&&b[1]>s),prev=B.filter(b=>b[1]<=s).sort((a,b)=>b[1]-a[1])[0],next=B.filter(b=>b[0]>=e).sort((a,b)=>a[0]-b[0])[0],before=prev?s-prev[1]:null,after=next?next[0]-e:null;
+const mm=o.date.slice(0,7),cnt=DB.offers.filter(x=>x.id!=o.id&&x.date.slice(0,7)==mm&&x.apps[k]&&x.apps[k].st=='ok'),used=cnt.reduce((a,x)=>a+x.apps[k].min,0),is=[];
+const pp=posOf(k);if(o.need&&!(o.need[pp]>0))is.push('Pozice '+pp+' není v nabídce');else if(full(o,pp))is.push('Místa pro pozici '+pp+' jsou obsazená');
+if(ov.length)is.push('Přesčas se překrývá '+(ov[0][2]=='směna'?'s jeho běžnou směnou':'s jiným jeho přesčasem'));
+if(before!=null&&before<R)is.push('Odpočinek před přesčasem jen '+fm(before)+' (minimum '+fm(R)+')');
+if(after!=null&&after<R)is.push('Odpočinek po přesčasu jen '+fm(after)+' (minimum '+fm(R)+')');
+if(used+v.min>Math.round(DB.cfg.ot*60))is.push('Překročil by měsíční limit přesčasů '+DB.cfg.ot+' h');
+const MX=Math.round(DB.cfg.max*60),all=B.concat([[s,e,'přesčas']]);let worst=0;all.forEach(b=>[b[0],b[1]-1440].forEach(x=>{if(x<e&&x+1440>s){let q=0;all.forEach(c=>{q+=Math.max(0,Math.min(c[1],x+1440)-Math.max(c[0],x))});worst=Math.max(worst,q)}}));
+if(worst>MX)is.push('Odpracoval by '+fm(worst)+' během 24 hodin (maximum '+fm(MX)+')');
+return {prev,before,next,after,n:cnt.length,used,worst,MX,R,issues:is}}
+const chkH=c=>`<div style="margin-top:8px;font-size:13px;line-height:1.5"><div class="tag ${c.issues.length?'bad':'ok'}">${c.issues.length?'✕ Nemůže na přesčas':'✓ Může na přesčas'}</div>${c.issues.map(i=>`<div class="bad">• ${i}</div>`).join('')}<div class="mut">Naposled v práci skončil: ${c.prev?aStr(c.prev[1])+' ('+c.prev[2]+')':'v posledních 7 dnech nepracoval'}</div><div class="mut">Odpočinek před přesčasem: ${c.before!=null?fm(c.before)+' '+mk(c.before>=c.R):'bez předchozí směny'} (minimum ${fm(c.R)})</div><div class="mut">Odpočinek po přesčasu: ${c.after!=null?fm(c.after)+' '+mk(c.after>=c.R):'bez další směny'}</div><div class="mut">Nejvíc práce za 24 hodin: ${fm(c.worst)} ${mk(c.worst<=c.MX)} (maximum ${fm(c.MX)})</div><div class="mut">Přesčasy v měsíci: ${c.n}× schváleno · ${fm(c.used)} z ${DB.cfg.ot} h</div></div>`;
+function presL(u){const T=DB.offers.filter(o=>o.team==u.team),hm=st.hm||TD.slice(0,7),[hy,hmo]=hm.split('-').map(Number);
+const up=T.filter(o=>o.date>=TD).sort((a,b)=>a.date<b.date?-1:1),hi=T.filter(o=>o.date<TD&&o.date.slice(0,7)==hm).sort((a,b)=>a.date<b.date?1:-1);
+const hrs=hi.reduce((x,o)=>x+Object.values(o.apps).filter(v=>v.st=='ok').reduce((y,v)=>y+v.min,0),0);
+const card=o=>`<div class="card"><div class="row"><b style="font-size:16px">${dl(o.date)}</b></div><div class="meta">${otxt(o)} · ${fm(olen(o))}${o.need?'<br>Obsazeno: '+Object.entries(o.need).filter(e=>e[1]>0).map(([p,n])=>p+' '+fillOf(o,p)+'/'+n).join(', '):''}</div>${Object.entries(o.apps).map(([k,v])=>{const c=v.st=='pend'?ovCheck(o,k):null;return `<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px"><div class="row"><div><b style="font-size:14px">${DB.u[k]?DB.u[k].name:k}</b><div class="lbl" style="font-size:13px">${posOf(k)} · ${vt(v)} · ${fm(v.min)}</div></div>${c?`<div style="display:flex;gap:6px"><button class="btn sec" onclick="decOv('${o.id}','${k}',0)">Ne</button><button class="btn blk" ${c.issues.length?'disabled':''} onclick="decOv('${o.id}','${k}',1)">Ano</button></div>`:`<span class="tag ${ST_T[v.st][1]}">${ST_T[v.st][0]}</span>`}</div>${c?chkH(c):''}</div>`}).join('')||'<div class="lbl">Bez přihlášek.</div>'}<button class="btn sec" style="margin-top:10px;width:100%" onclick="delOffer('${o.id}')">Smazat</button></div>`;
+return `<button class="btn" onclick="openOffer()">Nová nabídka přesčasu</button><h2>Nadcházející nabídky</h2>`+(up.map(card).join('')||'<div class="card meta" style="margin:0">Žádné nadcházející nabídky.</div>')+
+`<h2>Historie přesčasů</h2><div class="card row"><button class="mn" aria-label="Předchozí měsíc" onclick="hmv(-1)">‹</button><div style="text-align:center"><b>${MN[hmo-1]} ${hy}</b><div class="lbl">schváleno ${fm(hrs)}</div></div><button class="mn" aria-label="Další měsíc" onclick="hmv(1)">›</button></div>`+(hi.length?`<button class="btn sec" onclick="delHist()">${st.cdH?'Opravdu smazat historii měsíce?':'Smazat historii měsíce'}</button>`:'')+(hi.map(card).join('')||'<div class="card meta" style="margin:0">V tomto měsíci není žádná historie.</div>')}
+function hmv(d){const [y,m]=(st.hm||TD.slice(0,7)).split('-').map(Number),i=y*12+m-1+d;st.hm=Math.floor(i/12)+'-'+pad(i%12+1);st.cdH=false;render()}
+function delHist(){if(!st.cdH){st.cdH=true;render();return}const hm=st.hm||TD.slice(0,7),t=U().team;DB.offers=DB.offers.filter(o=>!(o.team==t&&o.date<TD&&o.date.slice(0,7)==hm));st.cdH=false;save();render();toast('Historie měsíce smazána')}
+function openOffer(){sheet(`<b style="font-size:18px">Nová nabídka přesčasu</b><div class="g2"><label>Datum od<input type="date" id="od" value="${TD}" oninput="offChg()"></label><label>Čas od<input type="time" id="os" value="06:00" oninput="offChg()"></label><label>Datum do<input type="date" id="od2" value="${TD}" oninput="offChg()"></label><label>Čas do<input type="time" id="oe" value="14:00" oninput="offChg()"></label></div><div id="osum" role="status" style="font-size:14px;font-weight:700"></div><div><div class="lbl" style="margin-bottom:6px">Koho a kolik lidí potřebujete</div><div class="g2">${POS.map((p,i)=>`<label>${p}<input type="number" id="np${i}" min="0" max="20" value="${i==0?1:0}"></label>`).join('')}</div></div><div class="meta" style="margin:0">Nabídka se zobrazí a oznámení se zvukem dostanou zaměstnanci vybraných pozic z ostatních týmů. Vaši lidé ji nedostanou.</div>${btns('saveOffer()','Vytvořit')}`,'#ED0007');offChg()}
+function offChg(){const d=$('od').value,s=$('os').value,e=$('oe').value;let d2=$('od2').value;if(d&&(!d2||d2<d)){d2=d;$('od2').value=d}if(d&&s&&e&&d2==d&&e<=s){d2=dkey(dayAbs(d)+1440);$('od2').value=d2}
+const S=d&&s?dayAbs(d)+tmin(s):0,E=d2&&e?dayAbs(d2)+tmin(e):0,x=$('osum');if(S&&E&&E>S){x.textContent='Délka přesčasu: '+fm(E-S);x.style.color='#1B2733'}else{x.textContent='Konec musí být po začátku';x.style.color='#C8000A'}}
+function saveOffer(){const u=U(),d=$('od').value,s=$('os').value,d2=$('od2').value,e=$('oe').value;if(!d||!s||!d2||!e)return toast('Vyplňte datum a čas od i do');
+const S=dayAbs(d)+tmin(s),E=dayAbs(d2)+tmin(e);if(E<=S)return toast('Konec přesčasu musí být po začátku');if(E-S>7*1440)return toast('Přesčas může trvat nejvýše 7 dní');
+const need={};for(let i=0;i<POS.length;i++){const n=parseInt($('np'+i).value,10)||0;if(n<0||n>20)return toast('Počet lidí: 0–20');if(n>0)need[POS[i]]=n}
+if(!Object.keys(need).length)return toast('Zadejte alespoň jednoho potřebného zaměstnance');
+const o={id:uid(),team:u.team,date:d,s0:s,date2:d2,s1:e,need,apps:{}};DB.offers.push(o);Object.keys(DB.u).filter(k=>DB.u[k].role=='emp'&&DB.u[k].team!=u.team&&need[DB.u[k].pos||'Operátor']>0).forEach(k=>notify(k,'Nová nabídka přesčasu – tým '+u.team,dl(d)+' · '+otxt(o)+' · '+needTxt(o)));save();closeDlg();render();toast('Nabídka vytvořena, vybraní zaměstnanci upozorněni')}
+function decOv(id,k,ok){const o=OF(id);if(ok&&ovCheck(o,k).issues.length)return toast('Přihláška porušuje nastavená pravidla');o.apps[k].st=ok?'ok':'no';wr(sb.rpc('offer_decide',{oid:id,uname:k,s:ok?'ok':'no'}));notify(k,ok?'Přesčas schválen':'Přesčas zamítnut',dl(o.date)+' · '+vt(o.apps[k]));save();render()}
+function delOffer(id){DB.offers=DB.offers.filter(o=>o.id!=id);save();render()}
+// žádosti (vedoucí)
+function zad(){const u=U(),R=DB.reqs.filter(r=>r.team==u.team),P=R.filter(r=>r.type=='dov'&&r.st=='pend'),I=R.filter(r=>r.type!='dov').slice(-6).reverse();
+return notifCard()+'<h2>Žádosti o dovolenou</h2>'+(P.map(r=>`<div class="card"><b style="font-size:15px">${r.name}</b><div class="meta">${dtxt(r.days)} · ${r.days.length} ${r.days.length<5?'dny':'dní'}</div><div class="row"><button class="btn sec" style="flex:1" onclick="decide('${r.id}',0)">Zamítnout</button><button class="btn" style="flex:1" onclick="decide('${r.id}',1)">Schválit</button></div></div>`).join('')||'<div class="card meta" style="margin:0">Žádné čekající žádosti.</div>')+'<h2>Hlášení nepřítomnosti</h2>'+(I.map(r=>`<div class="card row"><div><b style="font-size:15px">${r.name}</b><div class="lbl" style="font-size:13px">${typeOf(r.type).name} · ${dtxt(r.days)}</div></div></div>`).join('')||'<div class="card meta" style="margin:0">Žádná hlášení.</div>')}
+function decide(id,ok){const r=DB.reqs.find(x=>x.id==id);r.st=ok?'ok':'no';notify(r.user,ok?'Dovolená schválena':'Dovolená zamítnuta',dtxt(r.days));save();render();toast(ok?'Schváleno':'Zamítnuto')}
+// QR
+const ABC='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const POS=['Operátor','Seřizovač','Zásobovač'];
+function newQR(){sheet(`<b style="font-size:18px">Pro koho je QR kód?</b><div class="fld"><label>Pozice zaměstnance<select id="qp">${POS.map(p=>`<option>${p}</option>`).join('')}</select></label></div>${btns('genQR()','Vygenerovat')}`,'#007BC0')}
+function genQR(){const u=U(),pos=$('qp').value;let t='';const rb=crypto.getRandomValues(new Uint8Array(8));for(let i=0;i<8;i++)t+=ABC[rb[i]%ABC.length];DB.qr[t]={team:u.team,leader:ME,used:false,pos};wr(sb.from('qr').insert({code:t,team:u.team,leader:UID,pos}));
+sheet(`<b style="font-size:18px">Jednorázový QR pro zaměstnance</b><div id="qrb" style="display:flex;justify-content:center;padding:8px 0"></div><div style="text-align:center;font:700 24px monospace;letter-spacing:.12em">${t}</div><div class="meta" style="margin:0;text-align:center">${pos} · tým ${u.team} · platí jen pro jedno přihlášení</div><button class="btn" onclick="closeDlg();render()">Hotovo</button>`,'#007BC0');
+try{new QRCode($('qrb'),{text:t,width:168,height:168})}catch(e){}}
+// profil + admin
+function prof(){const u=U();let h=`<div class="card"><b style="font-size:16px">${u.name}</b><div class="meta" style="margin:3px 0 0">${u.role=='emp'&&u.pos?u.pos:RL[u.role]}${u.team?' · tým '+u.team:''}</div></div>`;
+if(u.team){const mm=TD.slice(0,7),mt=DB.offers.filter(o=>(u.role=='leader'?o.team==u.team:true)&&o.date.slice(0,7)==mm).reduce((x,o)=>x+Object.entries(o.apps).filter(([k,v])=>v.st=='ok'&&(u.role=='leader'||k==ME)).reduce((y,[,v])=>y+v.min,0),0);
+h+=`<div class="card"><div class="lbl">Přesčasy – ${MN[NOW.getMonth()]} ${NOW.getFullYear()}${u.role=='leader'?' (celý tým)':''}</div><div class="big">${fm(mt)}</div><div class="lbl">schváleno v tomto měsíci</div></div>`}
+if(u.role=='emp'){h+=`<div class="card row"><div><div class="lbl">Dovolená</div><div class="big">${bal()} dnů</div></div><div><div class="lbl">Vedoucí</div><b>${leadersOf(u.team).map(k=>DB.u[k].name).join(', ')||'–'}</b></div></div>`}
+if(u.role=='leader'){const T=Object.entries(DB.qr).filter(([,v])=>v.leader==ME&&!v.del);h+=`<button class="btn" onclick="newQR()">Vygenerovat QR pro zaměstnance</button><h2>Moje QR kódy</h2>`+(T.map(([k,v])=>`<div class="card row"><div><b style="font:700 15px monospace">${k}</b><div class="lbl">${v.pos||''}</div></div>${v.used?`<span class="tag ${v.del?'bad':'mut'}">${v.del?'Smazán – ':'Použito – '}${v.by}</span>`:`<div style="display:flex;gap:8px;align-items:center"><span class="tag ok">Aktivní</span><button class="btn sec" onclick="revQR('${k}')">Zrušit</button></div>`}</div>`).join('')||'<div class="card meta" style="margin:0">Zatím žádné kódy.</div>')+`<h2>Tým (${empsOf(u.team).length})</h2>`+(empsOf(u.team).map((k,i)=>`<div class="card"><div class="row"><div><b style="font-size:15px">${DB.u[k].name}</b><div class="lbl" style="font-size:13px">${DB.u[k].pos||'Operátor'}</div></div><button class="btn sec" onclick="delEmp('${k}')">${st.cdE==k?'Opravdu smazat?':'Smazat'}</button></div><div class="row fld" style="flex-direction:row;align-items:flex-end;margin-top:10px"><label style="flex:1">Zbývá dovolené (dnů)<input type="number" id="vc${i}" min="0" max="99" value="${balOf(k)}"></label><button class="btn" onclick="setVac('${k}','vc${i}')">Uložit</button></div></div>`).join('')||'<div class="card meta" style="margin:0">Tým je zatím prázdný.</div>')}
+if(u.role=='admin')h+=`<div class="card meta" style="margin:0">Uživatelů: ${Object.keys(DB.u).length} · vedoucích: ${Object.values(DB.u).filter(x=>x.role=='leader').length}</div>`;
+return pushCard()+h+`<button class="btn sec" onclick="logout()">Odhlásit se</button>`}
+function setVac(k,id){const v=parseInt($(id).value,10);if(!(v>=0&&v<=99))return toast('Zadejte počet dnů 0–99');DB.u[k].allow=v+used(k);wr(sb.rpc('set_allow',{uname:k,v:DB.u[k].allow}));notify(k,'Dovolená upravena','Vedoucí nastavil zbývající dovolenou na '+v+' dnů');save();render();toast('Dovolená nastavena')}
+function revQR(k){delete DB.qr[k];wr(sb.from('qr').delete().eq('code',k));render();toast('QR kód zrušen')}
+function delEmp(k){if(st.cdE!=k){st.cdE=k;render();return}st.cdE=null;adm('delete',{username:k},'Zaměstnanec smazán')}
+async function adm(action,body,ok){PEND++;let res=false;try{const {data:{session}}=await sb.auth.getSession();if(!session)throw 0;const r=await fetch(CFG.url+'/functions/v1/manage-user',{method:'POST',headers:{'Content-Type':'application/json',apikey:CFG.key,Authorization:'Bearer '+session.access_token},body:JSON.stringify({action,...body})});const j=await r.json().catch(()=>({}));if(!r.ok||j.error)toast(j.error||j.message||j.msg||('Chyba serveru '+r.status));else{toast(ok);res=true}}catch(e){console.error(e);toast('Server neodpověděl nebo ho blokuje prohlížeč (zkontrolujte funkci manage-user a ALLOWED_ORIGIN)')}finally{PEND--;await pull(true)}return res}
+function expTxt(yr){const L=['# RB SHIFT – rozpis směn','# R = ranní (6–14), O = odpolední (14–22), N = noční (22–6), - = volno','# Řádek rozpisu:  TÝM | RRRR-MM | jeden znak pro každý den v měsíci','# Řádek svátku:   SVATEK | RRRR-MM-DD | název',''];
+TEAMS.forEach(tm=>{const ls=leadersOf(tm).map(k=>DB.u[k].name).join(', ');L.push('# Tým '+tm+(ls?' (vedoucí: '+ls+')':''));Object.keys(SH[tm]||{}).sort().filter(m=>!yr||m.slice(0,4)==yr).forEach(m=>L.push(tm+' | '+m+' | '+SH[tm][m]));L.push('')});
+Object.keys(HN).sort().filter(d=>!yr||d.slice(0,4)==yr).forEach(d=>L.push('SVATEK | '+d+' | '+HN[d]));return L.join('\n')+'\n'}
+function doExp(){const y=$('xy').value,tx=expTxt(y);st.xt=tx;st.xn='rb-shift-rozpis'+(y?'-'+y:'')+'.txt';
+sheet(`<b style="font-size:18px">Export rozpisu</b><div class="fld"><textarea id="xo" readonly></textarea></div><div class="row"><button class="btn sec" style="flex:1" onclick="copyExp()">Kopírovat</button><button class="btn" style="flex:1" onclick="dlExp()">Stáhnout .txt</button></div><button class="btn sec" onclick="closeDlg()">Zavřít</button>`,'#007BC0');$('xo').value=tx}
+function dlExp(){try{const b=new Blob(['\ufeff'+st.xt],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=st.xn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Soubor stažen')}catch(e){toast('Stažení se nepodařilo, použijte Kopírovat')}}
+function copyExp(){const x=$('xo');x.select();try{navigator.clipboard.writeText(st.xt).then(()=>toast('Zkopírováno'),()=>{document.execCommand('copy');toast('Zkopírováno')})}catch(e){try{document.execCommand('copy');toast('Zkopírováno')}catch(e2){toast('Označte text a zkopírujte ručně')}}}
+function parseRoz(tx){const r={sh:{},hn:{},err:[],n:0,h:0};
+tx.replace(/^\ufeff/,'').split(/\r?\n/).forEach((ln,i)=>{ln=ln.trim();if(!ln||ln[0]=='#')return;const p=ln.split('|').map(s=>s.trim()),L='Řádek '+(i+1)+': ';
+if(p.length<3)return r.err.push(L+'očekávám tři části oddělené znakem |');
+if(norm(p[0])=='svatek'){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(p[1]);if(!m||new Date(+m[1],+m[2]-1,+m[3]).getMonth()!=+m[2]-1)return r.err.push(L+'neplatné datum svátku');if(!/^[^<>&"'`\\|]{1,40}$/.test(p[2]))return r.err.push(L+'název svátku: 1–40 znaků bez speciálních znaků');r.hn[p[1]]=p[2];r.h++;return}
+const tm=TEAMS.find(x=>norm(x)==norm(p[0]));if(!tm)return r.err.push(L+'neznámý tým „'+p[0].slice(0,20)+'“');
+if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(p[1]))return r.err.push(L+'měsíc musí být ve tvaru RRRR-MM');
+const [y,mo]=p[1].split('-').map(Number),dn=new Date(y,mo,0).getDate(),s=p[2].toUpperCase();
+if(!/^[ROND-]+$/.test(s))return r.err.push(L+'povolené znaky jsou jen R, O, N a -');
+if(s.length!=dn)return r.err.push(L+p[1]+' má '+dn+' dnů, ale zadáno je '+s.length+' znaků');
+(r.sh[tm]=r.sh[tm]||{})[p[1]]=s;r.n++});
+if(!r.n&&!r.h&&!r.err.length)r.err.push('Nenalezen žádný rozpis ani svátek');return r}
+function rChk(){const tx=$('rt').value,b=$('rb'),s=$('rs');if(!tx.trim()){s.innerHTML='';b.disabled=true;return}
+const r=parseRoz(tx);if(r.err.length){s.innerHTML=r.err.slice(0,5).map(e=>`<div class="bad">• ${e}</div>`).join('')+(r.err.length>5?`<div class="bad">… a dalších ${r.err.length-5} chyb</div>`:'');b.disabled=true;return}
+const ms=[...new Set(Object.values(r.sh).flatMap(x=>Object.keys(x)))].sort();
+s.innerHTML=`<div class="ok">✓ V pořádku: ${r.n} měsíců rozpisu${ms.length?' ('+ms[0]+' až '+ms[ms.length-1]+')':''}, týmy: ${Object.keys(r.sh).join(', ')||'–'}, svátků: ${r.h}</div>`;b.disabled=false}
+function rFile(inp){const f=inp.files&&inp.files[0];if(!f)return;if(f.size>500000)return toast('Soubor je příliš velký');const fr=new FileReader();fr.onload=()=>{$('rt').value=String(fr.result);rChk()};fr.onerror=()=>toast('Soubor se nepodařilo přečíst');fr.readAsText(f,'utf-8')}
+function applyRoz(){const r=parseRoz($('rt').value);if(r.err.length)return toast('Opravte chyby v textu');const all=$('rm').value=='all';
+Object.keys(r.sh).forEach(tm=>{if(all||!SH[tm])SH[tm]={};Object.assign(SH[tm],r.sh[tm])});
+if(r.h){if(all)Object.keys(HN).forEach(k=>delete HN[k]);Object.assign(HN,r.hn)}
+DB.sh=SH;DB.hn=HN;rng();clampSt();const tms=Object.keys(r.sh);
+Object.keys(DB.u).filter(k=>DB.u[k].role!='admin'&&(!tms.length||tms.includes(DB.u[k].team))).forEach(k=>notify(k,'Nový rozpis směn','Správce aktualizoval rozpis směn'));
+save();render();toast('Rozpis načten: '+r.n+' měsíců, '+r.h+' svátků')}
+function roz(){const yrs=[...new Set(TEAMS.flatMap(x=>Object.keys(SH[x]||{}).map(m=>m.slice(0,4))))].sort();
+const cov=TEAMS.map(x=>{const ks=Object.keys(SH[x]||{}).sort();return `<div class="lbl" style="font-size:13px"><b style="color:var(--ink)">${x}</b>: ${ks.length?ks[0]+' až '+ks[ks.length-1]+' ('+ks.length+' měs.)':'bez rozpisu'}</div>`}).join('');
+return `<div class="card fld"><b>Export rozpisu (TXT)</b><label>Rok<select id="xy"><option value="">Všechny roky</option>${yrs.map(y=>`<option>${y}</option>`).join('')}</select></label><div class="meta" style="margin:0">Rozpis směn všech týmů (vedoucích) a státní svátky v textovém souboru.</div><button class="btn" onclick="doExp()">Exportovat</button></div>
+<div class="card fld"><b>Načíst nový rozpis</b><div class="meta" style="margin:0">Pro nový rok nebo po změnách. Postup: export, úprava v textovém editoru, načtení. Formát je stejný jako v exportu.</div><label>Soubor .txt<input type="file" id="rf" accept=".txt,text/plain" onchange="rFile(this)"></label><label>Nebo vložte text<textarea id="rt" oninput="rChk()" spellcheck="false"></textarea></label><label>Režim<select id="rm"><option value="merge">Přepsat jen měsíce uvedené v textu</option><option value="all">Nahradit celý rozpis týmů uvedených v textu</option></select></label><div id="rs" role="status" style="font-size:13px;line-height:1.5"></div><button class="btn" id="rb" disabled onclick="applyRoz()">Načíst rozpis</button></div>
+<div class="card"><b style="font-size:14px">Aktuálně nahráno</b><div style="margin-top:6px">${cov}</div></div>`}
+function lim(){const c=DB.cfg;return `<div class="card fld"><b>Pravidla pro přesčasy</b><label>Limit přesčasů na zaměstnance za měsíc (hodin)<input type="number" id="lo" min="0" max="200" step="0.5" value="${c.ot}"></label><label>Minimální doba odpočinku mezi směnami (hodin)<input type="number" id="lr" min="0" max="24" step="0.5" value="${c.rest}"></label><label>Maximum odpracovaných hodin za 24 hodin (hodin)<input type="number" id="lm" min="1" max="24" step="0.5" value="${c.max}"></label><div class="meta" style="margin:0">Vedoucí u každé přihlášky na přesčas uvidí, zda zaměstnanec pravidla splňuje, kdy naposled skončil v práci a kolikrát měl přesčas v měsíci. Přihlášku, která pravidla porušuje, nelze schválit.</div><button class="btn" onclick="saveLim()">Uložit</button></div>`}
+function saveLim(){const o=parseFloat($('lo').value),r=parseFloat($('lr').value),m=parseFloat($('lm').value);if(!(o>=0&&o<=200))return toast('Limit přesčasů: 0–200 hodin');if(!(r>=0&&r<=24))return toast('Odpočinek: 0–24 hodin');if(!(m>=1&&m<=24))return toast('Maximum za 24 hodin: 1–24 hodin');DB.cfg={ot:o,rest:r,max:m};save();render();toast('Limity uloženy')}
+function ved(){const Ls=Object.keys(DB.u).filter(k=>DB.u[k].role=='leader'),Es=Object.keys(DB.u).filter(k=>DB.u[k].role=='emp'),tms=[...new Set([...TEAMS,...Ls.map(k=>DB.u[k].team),...Es.map(k=>DB.u[k].team)])];
+const row=(k,sub,code)=>`<div class="card row"><div><b style="font-size:15px">${esc(DB.u[k].name)}</b><div class="lbl" style="font-size:13px">${esc(sub)}</div></div><button class="btn sec" onclick="${code}">Upravit</button></div>`;
+const none='<div class="card meta" style="margin:0">Nikdo zatím není.</div>';
+return `<button class="btn" onclick="openLeader()">Nový vedoucí</button><h2>Vedoucí (${Ls.length})</h2>`+(tms.map(tm=>Ls.filter(k=>DB.u[k].team==tm).map(k=>row(k,'vedoucí · tým '+tm,`st.cd=false;editLeader('${k}')`)).join('')).join('')||none)+`<h2>Zaměstnanci (${Es.length})</h2>`+(Es.length?tms.map(tm=>{const E=Es.filter(k=>DB.u[k].team==tm);return E.length?`<h2 style="color:var(--ink)">Tým ${esc(tm)} (${E.length})</h2>`+E.map(k=>row(k,(DB.u[k].pos||'Operátor')+' · tým '+tm,`st.cdA=false;editEmp('${k}')`)).join(''):''}).join(''):'<div class="card meta" style="margin:0">Zatím se nikdo nezaregistroval.</div>')}
+function editLeader(k){st.adm=k;const l=DB.u[k];sheet(`<b style="font-size:18px">Upravit vedoucího</b><div class="fld"><label>Jméno (přihlašovací)<input id="an" value="${esc(l.name)}"></label><label>Tým<select id="at">${TEAMS.map(x=>`<option${x==l.team?' selected':''}>${x}</option>`).join('')}</select></label><label>Nové heslo (prázdné = beze změny)<input id="ap" type="password" autocomplete="new-password"></label></div><div class="row"><button class="btn sec" style="flex:1" onclick="delLeader()">${st.cd?'Opravdu smazat?':'Smazat'}</button><button class="btn" style="flex:1" onclick="saveLeader()">Uložit</button></div>`,'#007BC0')}
+function editEmp(k){st.ae=k;const e=DB.u[k],ep=e.pos||'Operátor';sheet(`<b style="font-size:18px">Upravit zaměstnance</b><div class="fld"><label>Jméno (přihlašovací)<input id="en" value="${esc(e.name)}"></label><label>Nové heslo (prázdné = beze změny)<input id="ep" type="password" autocomplete="new-password"></label><label>Tým<select id="et">${TEAMS.map(x=>`<option${x==e.team?' selected':''}>${x}</option>`).join('')}</select></label><label>Pozice<select id="epo">${POS.map(x=>`<option${x==ep?' selected':''}>${x}</option>`).join('')}</select></label></div><div class="row"><button class="btn sec" style="flex:1" onclick="delAdminEmp()">${st.cdA?'Opravdu smazat?':'Smazat'}</button><button class="btn" style="flex:1" onclick="saveEmp()">Uložit</button></div>`,'#007BC0')}
+async function saveEmp(){const o=st.ae,n=$('en').value.trim().replace(/\s+/g,' '),p=$('ep').value;if(!NAMEOK.test(n))return toast('Jméno: 2–30 znaků, písmena a mezery');if(p&&p.length<8)return toast('Heslo musí mít alespoň 8 znaků');
+const nk=norm(n);if(nk!=o&&DB.u[nk])return toast('Toto jméno už existuje');
+const b={username:o,name:n,password:p,team:$('et').value,pos:$('epo').value};closeDlg();await adm('update',b,'Zaměstnanec uložen')}
+async function delAdminEmp(){if(!st.cdA){st.cdA=true;editEmp(st.ae);return}const k=st.ae;st.cdA=false;st.ae=null;closeDlg();await adm('delete',{username:k},'Zaměstnanec smazán')}
+async function saveLeader(){const o=st.adm,n=$('an').value.trim().replace(/\s+/g,' '),p=$('ap').value;if(!NAMEOK.test(n))return toast('Jméno: 2–30 znaků, písmena a mezery');if(p&&p.length<8)return toast('Heslo musí mít alespoň 8 znaků');
+const nk=norm(n);if(nk!=o&&DB.u[nk])return toast('Toto jméno už existuje');
+const b={username:o,name:n,password:p,team:$('at').value};closeDlg();await adm('update',b,'Vedoucí uložen')}
+async function delLeader(){if(!st.cd){st.cd=true;editLeader(st.adm);return}const k=st.adm;st.cd=false;st.adm=null;closeDlg();await adm('delete',{username:k},'Vedoucí smazán')}
+function openLeader(){sheet(`<b style="font-size:18px">Nový vedoucí</b><div class="fld"><label>Jméno<input id="nn"></label><label>Tým<select id="nt">${TEAMS.map(t=>`<option>${t}</option>`).join('')}</select></label><label>Heslo (min. 8 znaků)<input id="np" type="password" autocomplete="new-password"></label></div>${btns('addLeader()','Vytvořit')}`,'#ED0007')}
+async function addLeader(){const n=$('nn').value.trim().replace(/\s+/g,' '),p=$('np').value,k=norm(n);if(!NAMEOK.test(n))return toast('Jméno: 2–30 znaků, písmena a mezery');if(p.length<8)return toast('Heslo musí mít alespoň 8 znaků');if(DB.u[k])return toast('Toto jméno už existuje');
+const b={name:n,team:$('nt').value,password:p};closeDlg();await adm('create_leader',b,'Vedoucí vytvořen')}
+// ---------- render
+function render(){const u=U();
+if(!u){$('t').textContent='Přihlášení';$('s').textContent='Směnný provoz';$('who').textContent='';$('m').innerHTML=BOOT?'<div class="card meta" style="margin:0">Načítání…</div>':login();$('nav').innerHTML='';return}
+if(!TB[u.role].find(x=>x[0]==st.tab))st.tab=TB[u.role][0][0];
+const t=TT(u)[st.tab];$('t').textContent=t[0];$('s').textContent=t[1];$('who').textContent=u.name+' · '+(u.role=='emp'&&u.pos?u.pos:RL[u.role]);
+$('m').innerHTML={sm,pres,nem,zad,ved,lim,pre,roz,prof}[st.tab]();nav()}
+render();
+// ---------- zvuk a živá synchronizace oznámení
+let AC=null;
+function unlockAudio(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state=='suspended')AC.resume()}catch(e){}try{if(window.Notification&&Notification.permission=='default')Notification.requestPermission()}catch(e){}}
+['click','keydown','touchstart'].forEach(e=>document.addEventListener(e,unlockAudio,{passive:true}));
+function beep(){try{unlockAudio();if(AC)[0,.25,.5].forEach((d,i)=>{const o=AC.createOscillator(),g=AC.createGain(),t0=AC.currentTime+d;o.type='sine';o.frequency.value=i==1?1180:880;o.connect(g);g.connect(AC.destination);g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.35,t0+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+.2);o.start(t0);o.stop(t0+.22)});navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}}
+// ---------- push notifikace (telefon)
+const PUSHOK=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const b64=s=>{const p='='.repeat((4-s.length%4)%4),r=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)))};
+async function pushSub(ask){if(!PUSHOK()||!UID)return false;
+const reg=await navigator.serviceWorker.ready;
+if(Notification.permission=='default'&&ask)await Notification.requestPermission();
+if(Notification.permission!='granted')return false;
+let s=await reg.pushManager.getSubscription();
+if(!s)s=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(CFG.vapid)});
+const j=s.toJSON();
+const {error}=await sb.from('push_subs').upsert({endpoint:j.endpoint,user_id:UID,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:'endpoint'});
+return !error}
+async function pushOff(){if(!PUSHOK())return;const reg=await navigator.serviceWorker.ready,s=await reg.pushManager.getSubscription();if(s){await sb.from('push_subs').delete().eq('endpoint',s.endpoint);await s.unsubscribe()}}
+function pushInit(){try{if(PUSHOK()&&Notification.permission=='granted')pushSub(false).catch(()=>{})}catch(e){}}
+async function enPush(){let ok=false;try{ok=await pushSub(true)}catch(e){}toast(ok?'Upozornění zapnuta':'Upozornění se nepodařilo zapnout – povolte je v nastavení telefonu');render()}
+function pushCard(){if(!ME)return '';
+const ios=/iphone|ipad|ipod/i.test(navigator.userAgent),inst=navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+if(ios&&!inst)return `<div class="card" style="border-left:4px solid #007BC0"><b>Upozornění na telefonu</b><div class="meta" style="margin:3px 0 0">Na iPhonu klepněte v Safari na Sdílet → Přidat na plochu, spusťte aplikaci z plochy a zapněte upozornění.</div></div>`;
+if(!PUSHOK()||Notification.permission=='granted')return '';
+if(Notification.permission=='denied')return `<div class="card" style="border-left:4px solid #C8000A"><b>Upozornění jsou zablokovaná</b><div class="meta" style="margin:3px 0 0">Povolte oznámení pro tuto aplikaci v nastavení telefonu.</div></div>`;
+return `<div class="card row"><div><b>Zapnout upozornění</b><div class="lbl" style="font-size:13px">Nabídky přesčasů a schválení hned v telefonu</div></div><button class="btn" onclick="enPush()">Zapnout</button></div>`}
+// ---------- spuštění
+setInterval(()=>{if(needR&&ME&&!$('dlg').innerHTML&&!/INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName||'')){needR=false;render()}},2000);
+setInterval(()=>{if(UID&&!document.hidden)pull(true)},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&UID)pull(true)});
+window.addEventListener('online',()=>{if(UID){listen();pull(true)}});
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+(async()=>{try{const {data}=await sb.auth.getSession();if(data.session){UID=data.session.user.id;await pull(true);if(ME){listen();st.tab=TB[DB.u[ME].role][0][0];pushInit()}else{await sb.auth.signOut();UID=null}}}catch(e){}BOOT=false;render()})();
+
+</script>
+</body>
+</html>
