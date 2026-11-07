@@ -139,6 +139,7 @@ const TYPES0=[{id:'nem',name:'Nahlásit nemoc',desc:'Informuje vedoucího směny
 let DB={u:{},qr:{},reqs:[],notif:{},offers:[],cancel:[],types:TYPES0.map(t=>({...t})),cfg:{ot:20,rest:8,max:16},sh:SH,hn:HN};
 const typeOf=id=>DB.types.find(t=>t.id==id)||{name:'Jiné',color:'#8A949E',dot:false};
 const dotH=v=>v=='dov'||v=='dovp'?`<i class="dot ${v}"></i>`:`<i class="dot" style="background:${typeOf(v).color}"></i>`;
+const EXPD=new Set();
 let ME=null,UID=null,BOOT=true,SNAP=new Map(),OUTQ=[],PEND=0,PT=null,needR=false,CH=null;
 function docsOf(){const m=new Map(),add=(kind,id,team,owner,ukey,data)=>m.set(kind+':'+id,{kind,id:String(id),team:team??null,owner:owner||null,ukey:ukey||null,data});
 DB.reqs.forEach(r=>add('req',r.id,r.team,DB.u[r.user]&&DB.u[r.user].id,r.user,r));
@@ -181,7 +182,10 @@ TEAMS.forEach(t=>{if(!N.sh[t]&&SH0[t])N.sh[t]=JSON.parse(JSON.stringify(SH0[t]))
 N.hn=N.hn||JSON.parse(JSON.stringify(HN0));
 const mu=me?me.username:null;
 qr.data.forEach(x=>N.qr[x.code]={team:x.team,leader:mu,used:x.used,pos:x.pos,by:x.by_name});
-N.notif[mu]=n.data.map(x=>({id:x.id,t:x.title,m:x.msg||'',r:x.read?1:0}));
+N.notif[mu]=n.data.map(x=>({id:x.id,t:x.title,m:x.msg||'',r:x.read?1:0,rf:x.ref||null}));
+const ex=N.notif[mu].filter(x=>x.rf&&x.rf.slice(0,2)=='c|'&&x.rf.slice(-10)<TD&&!EXPD.has(x.id));
+if(ex.length){ex.forEach(x=>EXPD.add(x.id));wr(sb.from('notif').delete().in('id',ex.map(x=>x.id)))}
+N.notif[mu]=N.notif[mu].filter(x=>!EXPD.has(x.id));
 const before=ME?unread():0;
 DB=N;SH=DB.sh;HN=DB.hn;rng();mkSnap();ME=mu;
 if(!ME)return;
@@ -200,7 +204,7 @@ const st={ed:null,tab:'sm',view:'m',y:NOW.getFullYear(),m:NOW.getMonth(),sel:new
 const U=()=>DB.u[ME];
 const leadersOf=t=>Object.keys(DB.u).filter(k=>DB.u[k].role=='leader'&&DB.u[k].team==t);
 const empsOf=t=>Object.keys(DB.u).filter(k=>DB.u[k].role=='emp'&&DB.u[k].team==t);
-function notify(k,t,m){const u=DB.u[k];if(!u||!u.id)return;OUTQ.push({user_id:u.id,title:String(t).slice(0,120),msg:String(m||'').slice(0,300)})}
+function notify(k,t,m,rf){const u=DB.u[k];if(!u||!u.id)return;OUTQ.push(Object.assign({user_id:u.id,title:String(t).slice(0,120),msg:String(m||'').slice(0,300)},rf?{ref:rf}:{}))}
 const unread=()=>(DB.notif[ME]||[]).filter(n=>!n.r).length;
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove('on'),2600)}
 // ---------- icons / tabs
@@ -278,15 +282,17 @@ function cancCard(){const u=U(),lead=u.role=='leader',L=DB.cancel.filter(c=>c.te
 if(!L.length&&!lead)return '';
 return `<div class="card"><div class="row"><b>Zrušené směny</b>${lead?'<button class="btn" onclick="openCanc()">Zrušit směnu</button>':''}</div>`+(L.map(c=>{const [y,m,d]=c.date.split('-').map(Number),s=shiftOf(c.team,y,m-1,d);return `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><div class="row"><div><b style="font-size:14px;color:#C8000A">${dl(c.date)} · ${s?SN[s]+' směna':'směna'} zrušena</b>${c.note?`<div class="lbl" style="font-size:13px">${esc(c.note)}</div>`:''}</div>${lead?`<div style="display:flex;gap:6px"><button class="btn sec" onclick="openCanc('${c.id}')">Upravit</button><button class="btn sec" onclick="delCanc('${c.id}')">${st.cdC==c.id?'Opravdu?':'Obnovit'}</button></div>`:''}</div>${ackBox(c,lead)}</div>`}).join('')||'<div class="meta" style="margin:8px 0 0">Žádná zrušená směna.</div>')+'</div>'}
 function openCanc(id){const c=id?DB.cancel.find(x=>x.id==id):{date:TD,note:''};if(!c)return;sheet(`<b style="font-size:18px">${id?'Upravit zrušenou směnu':'Zrušit směnu'}</b><div class="fld"><label>Datum<input type="date" id="cd" value="${c.date}" min="${TD}"${id?' disabled':''}></label><label>Poznámka (nepovinné)<input id="cn" maxlength="100" value="${esc(c.note)}" placeholder="např. jedna linka ze 4 pojede"></label></div><div class="meta" style="margin:0">Zobrazí se jen zaměstnancům týmu ${U().team}, kteří se přihlásili přes QR kód vedoucího.</div>${btns(`saveCanc('${id||''}')`,'Uložit')}`,'#ED0007')}
-function cancNotify(tm,title,msg){empsOf(tm).forEach(k=>notify(k,title,msg))}
+function cancNotify(tm,title,msg,rf){empsOf(tm).forEach(k=>notify(k,title,msg,rf))}
+const cRef=c=>'c|'+c.id+'|'+c.date;
+async function clrCancN(c){PEND++;try{const r=await sb.rpc('cancel_clear_notifs',{rf:cRef(c)});if(r.error)throw r.error}catch(e){console.error(e)}finally{PEND--}}
 function saveCanc(id){const u=U(),n=$('cn').value.trim().slice(0,100);
-if(id){const c=DB.cancel.find(x=>x.id==id);if(!c||c.team!=u.team)return;let rs=0;if(c.note!==n){c.note=n;c.acks={};rs=1}cancNotify(u.team,'Zrušená směna upravena – '+dl(c.date),(n||'Směna je zrušená')+(rs?' · potvrďte znovu':''))}
+if(id){const c=DB.cancel.find(x=>x.id==id);if(!c||c.team!=u.team)return;let rs=0;if(c.note!==n){c.note=n;c.acks={};rs=1}cancNotify(u.team,'Zrušená směna upravena – '+dl(c.date),(n||'Směna je zrušená')+(rs?' · potvrďte znovu':''),cRef(c))}
 else{const d=$('cd').value;if(!d)return toast('Vyberte datum');if(d<TD)return toast('Datum nesmí být v minulosti');const [y,m,dd]=d.split('-').map(Number),s=shiftOf(u.team,y,m-1,dd);
 if(!s)return toast('V tento den tým nemá žádnou směnu');if(isCanc(u.team,d))return toast('Tato směna už je zrušená – upravte ji v seznamu');
-DB.cancel.push({id:uid(),team:u.team,date:d,note:n,by:ME,acks:{}});cancNotify(u.team,'Zrušená směna – '+dl(d),SN[s]+' směna'+(n?' · '+n:'')+' · potvrďte přečtení')}
-save();closeDlg();render();toast(id?'Poznámka uložena':'Směna zrušena, tým upozorněn')}
+const nc={id:uid(),team:u.team,date:d,note:n,by:ME,acks:{}};DB.cancel.push(nc);cancNotify(u.team,'Zrušená směna – '+dl(d),SN[s]+' směna'+(n?' · '+n:'')+' · potvrďte přečtení',cRef(nc))}
+if(id)clrCancN(DB.cancel.find(x=>x.id==id)).then(save);else save();closeDlg();render();toast(id?'Poznámka uložena':'Směna zrušena, tým upozorněn')}
 function delCanc(id){const c=DB.cancel.find(x=>x.id==id);if(!c||c.team!=U().team)return;if(st.cdC!=id){st.cdC=id;render();return}
-DB.cancel=DB.cancel.filter(x=>x.id!=id);st.cdC=null;cancNotify(c.team,'Směna obnovena – '+dl(c.date),'Zrušení směny bylo odvoláno');save();render();toast('Směna obnovena, tým upozorněn')}
+DB.cancel=DB.cancel.filter(x=>x.id!=id);st.cdC=null;cancNotify(c.team,'Směna obnovena – '+dl(c.date),'Zrušení směny bylo odvoláno',cRef(c));clrCancN(c).then(save);render();toast('Směna obnovena, tým upozorněn')}
 function pick(k){const ev=evMap(),[y,m,d]=k.split('-').map(Number);if(st.sel.has(k))st.sel.delete(k);else if(isCanc(U().team,k))toast('Směna je zrušená – dovolená není potřeba');else if(shiftOf(U().team,y,m-1,d)&&!HN[k]&&!ev[k])st.sel.add(k);else toast('V tento den nelze žádat o dovolenou');render()}
 function mon(d){if(st.view=='y'){st.y=Math.min(Math.floor(MAXI/12),Math.max(Math.floor(MINI/12),st.y+d));render();return}const i=Math.min(MAXI,Math.max(MINI,st.y*12+st.m+d));st.y=Math.floor(i/12);st.m=i%12;render()}
 const editBanner=()=>st.ed?`<div class="card" style="border-left:4px solid #007BC0"><b>Úprava žádosti o dovolenou</b><div class="meta" style="margin:3px 0 0">Klepnutím na dny je přidáte nebo odeberete, potom uložte změny.</div></div>`:'';
