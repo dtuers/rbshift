@@ -1,5 +1,5 @@
 // RB SHIFT – service worker: offline obálka aplikace a push notifikace
-const V = 'rbshift-v1';
+const V = 'rbshift-v2';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png'];
 
 self.addEventListener('install', (e) => {
